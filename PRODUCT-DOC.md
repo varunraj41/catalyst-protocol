@@ -523,6 +523,6 @@ Flags surface **only** in the Manager report — never in the candidate view.
 | Change positive-summary copy | `catalyst-shared.js` → `POS_SUMMARY`, `POSITIVE_BULLETS` |
 | Change level narratives | `catalyst-shared.js` → `LEVEL_META`, `LEVEL_SUMMARY` |
 
----
+--- --
 
 *End of document.*
