@@ -468,12 +468,17 @@ function AppHeader({ role, onToggleRole, onHome, progress, active, completed, ca
       )}
       <div className="flex items-center gap-2 shrink-0 ml-auto">
         {candidateName && <span className="chip hidden sm:inline-flex" style={{background:"rgba(74,222,128,0.08)",color:"var(--green)",borderColor:"rgba(74,222,128,0.3)"}}><Icon name="user" className="w-3 h-3"/>{candidateName}</span>}
-        {role==="candidate" && <a href="adventure.html" className="btn-ghost px-3 py-2 text-[11px] flex items-center gap-1.5" title="Switch to Adventure">🗺️ <span className="hidden md:inline">Adventure</span></a>}
-        <button onClick={onToggleRole} className="btn-ghost px-3.5 py-2 text-[11px] flex items-center gap-2">
-          <Icon name={role==="candidate"?"briefcase":"user"} className="w-4 h-4"/>
-          <span className="hidden sm:inline">{role==="candidate"?"MANAGER":"CANDIDATE"}</span>
-          <Icon name="portal" className="w-3 h-3 opacity-60"/>
-        </button>
+        {/* Theme + role toggles hidden once the candidate starts the protocol */}
+        {role==="candidate" && progress==null && (
+          <a href="adventure.html" className="btn-ghost px-3 py-2 text-[11px] flex items-center gap-1.5" title="Switch to Adventure">🗺️ <span className="hidden md:inline">Adventure</span></a>
+        )}
+        {(role==="manager" || progress==null) && (
+          <button onClick={onToggleRole} className="btn-ghost px-3.5 py-2 text-[11px] flex items-center gap-2">
+            <Icon name={role==="candidate"?"briefcase":"user"} className="w-4 h-4"/>
+            <span className="hidden sm:inline">{role==="candidate"?"MANAGER":"CANDIDATE"}</span>
+            <Icon name="portal" className="w-3 h-3 opacity-60"/>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -969,28 +974,49 @@ function Level2Screen({ scenario, onSubmit, logging }) {
   );
 }
 
-/* LEVEL 3 — Inline rank-click (clearer UX) */
+/* LEVEL 3 — Square-box sequential click (mission-themed) */
 function Level3Screen({ idx, total: scenarioTotal, scenario, timeLeft, onSubmit, logging, onOrderChange }) {
-  const [rankings, setRankings] = useState([]);
-  useEffect(() => { setRankings([]); }, [scenario.id]);
-  useEffect(() => { onOrderChange && onOrderChange(rankings); }, [rankings]);
-  const total = scenario.options.length;
-  const { show: showPill, pillKey } = useScenePill(idx || 0);
-  const allRanked = rankings.length === total;
-  const nextRank = rankings.length + 1;
-  const rankOf = (i) => { const p = rankings.indexOf(i); return p === -1 ? null : p + 1; };
-  const toggle = (i) => {
+  const [rankMap, setRankMap] = useState({});
+  useEffect(() => { setRankMap({}); }, [scenario.id]);
+  useEffect(() => {
+    const ordered = [1,2,3].map(r => {
+      const optId = Object.keys(rankMap).find(k => rankMap[k] === r);
+      const i = scenario.options.findIndex(o => o.id === optId);
+      return i;
+    }).filter(i => i !== -1);
+    onOrderChange && onOrderChange(ordered);
+  }, [rankMap]);
+
+  const RANK_COLOR = { 1: "#4ade80", 2: "#4d9fff", 3: "#b388ff" };
+  const RANK_LABEL = { 1: "1ST", 2: "2ND", 3: "3RD" };
+
+  const rankOf = (optId) => rankMap[optId] || null;
+
+  const toggle = (optId) => {
     if (logging) return;
-    const existing = rankOf(i);
-    if (existing !== null) { setRankings(rankings.slice(0, existing - 1)); return; }
-    if (rankings.length < total) setRankings([...rankings, i]);
+    setRankMap(prev => {
+      const next = { ...prev };
+      if (next[optId]) { delete next[optId]; return next; }
+      for (let r = 1; r <= 3; r++) {
+        if (!Object.values(next).includes(r)) { next[optId] = r; return next; }
+      }
+      return next;
+    });
   };
 
-  const MEDAL       = { 1:"🥇", 2:"🥈", 3:"🥉" };
-  const MEDAL_LABEL = { 1:"1ST PRIORITY", 2:"2ND PRIORITY", 3:"3RD PRIORITY" };
-  const RANK_COLOR  = { 1:"#4ade80", 2:"#4d9fff", 3:"#b388ff" };
-  const ordinal     = n => n===1?"1ST":n===2?"2ND":"3RD";
-  const promptText  = allRanked ? "ALL RANKED — CONFIRM TO CONTINUE" : `TAP YOUR ${ordinal(nextRank)} PRIORITY`;
+  const submit = () => {
+    const ordered = [1,2,3].map(r => {
+      const optId = Object.keys(rankMap).find(k => rankMap[k] === r);
+      return scenario.options.findIndex(o => o.id === optId);
+    });
+    onSubmit(ordered);
+  };
+
+  const assignedCount = Object.keys(rankMap).length;
+  const allAssigned = assignedCount === 3;
+  const nextRank = (() => { for (let r = 1; r <= 3; r++) if (!Object.values(rankMap).includes(r)) return r; return null; })();
+
+  const { show: showPill, pillKey } = useScenePill(idx || 0);
 
   return (
     <div key={scenario.id} className="scene-slide-in max-w-3xl mx-auto px-4 md:px-8 py-6">
@@ -1014,103 +1040,74 @@ function Level3Screen({ idx, total: scenarioTotal, scenario, timeLeft, onSubmit,
         <div className="text-[15px] md:text-base leading-relaxed text-white/95">{scenario.situation}</div>
       </div>
 
-      {/* Prompt + progress nodes */}
-      <div className="text-center mb-5">
-        <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-sm font-mono font-bold text-xs tracking-[0.2em]"
+      {/* How-to prompt */}
+      <div className="mb-5 flex items-center justify-center">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-sm font-mono text-xs font-bold tracking-[0.15em]"
              style={{
-               background: allRanked ? "rgba(74,222,128,0.08)" : "rgba(251,191,36,0.08)",
-               color: allRanked ? "var(--green)" : "var(--amber)",
-               border: `1px solid ${allRanked ? "rgba(74,222,128,0.35)" : "rgba(251,191,36,0.35)"}`,
-               boxShadow: allRanked ? "0 0 20px rgba(74,222,128,0.25)" : "0 0 20px rgba(251,191,36,0.2)"
+               background: allAssigned ? "rgba(74,222,128,0.08)" : "rgba(251,191,36,0.08)",
+               color: allAssigned ? "var(--green)" : "var(--amber)",
+               border: `1px solid ${allAssigned ? "rgba(74,222,128,0.35)" : "rgba(251,191,36,0.35)"}`,
+               boxShadow: allAssigned ? "0 0 18px rgba(74,222,128,0.25)" : "0 0 18px rgba(251,191,36,0.2)"
              }}>
-          <Icon name={allRanked?"check":"target"} className="w-3.5 h-3.5"/>
-          {promptText}
-        </div>
-        <div className="mt-3 flex items-center justify-center gap-2">
-          {[1,2,3].map(n => (
-            <div key={n} className="flex items-center gap-1.5">
-              <div className="w-8 h-8 rounded-sm flex items-center justify-center font-display font-bold text-xs transition-all"
-                   style={{
-                     background: n <= rankings.length ? `linear-gradient(135deg, ${RANK_COLOR[n]}30, ${RANK_COLOR[n]}10)` : "rgba(255,255,255,0.05)",
-                     border: `1px solid ${n <= rankings.length ? RANK_COLOR[n] : "rgba(255,255,255,0.1)"}`,
-                     color: n <= rankings.length ? RANK_COLOR[n] : "rgba(255,255,255,0.3)",
-                     boxShadow: n === nextRank && !allRanked ? `0 0 0 3px ${RANK_COLOR[n]}22, 0 0 18px ${RANK_COLOR[n]}77` : "none",
-                     transform: n === nextRank && !allRanked ? "scale(1.12)" : "scale(1)"
-                   }}>
-                {n <= rankings.length ? MEDAL[n] : n}
-              </div>
-              {n < 3 && <div className="w-4 h-px" style={{background: n <= rankings.length ? RANK_COLOR[n] : "rgba(255,255,255,0.1)"}}/>}
-            </div>
-          ))}
+          <Icon name={allAssigned?"check":"target"} className="w-3.5 h-3.5"/>
+          {allAssigned
+            ? "ALL RANKED — CONFIRM TO CONTINUE"
+            : `TAP IN PRIORITY ORDER — NEXT CLICK = ${RANK_LABEL[nextRank]}`}
         </div>
       </div>
 
-      {/* Inline options — each becomes a rank target */}
+      {/* Options — square rank indicator on left, text on right */}
       <div className="space-y-3">
         {scenario.options.map((opt, i) => {
-          const rank = rankOf(i);
+          const rank = rankOf(opt.id);
           const isRanked = rank !== null;
-          const col = isRanked ? RANK_COLOR[rank] : "rgba(255,255,255,0.15)";
+          const color = isRanked ? RANK_COLOR[rank] : null;
           return (
-            <button key={opt.id} disabled={logging} onClick={() => toggle(i)}
-                    className="w-full text-left rounded-sm p-4 md:p-5 flex items-center gap-4 relative overflow-hidden transition-all"
+            <button key={opt.id} onClick={() => toggle(opt.id)} disabled={logging}
+                    className="w-full text-left rounded-sm transition-all flex items-center gap-4 p-4 md:p-5 relative overflow-hidden"
                     style={{
-                      background: isRanked ? `rgba(15,22,43,0.7)` : "rgba(15,22,43,0.5)",
-                      backdropFilter: "blur(12px)",
-                      WebkitBackdropFilter: "blur(12px)",
-                      border: `1px solid ${col}`,
+                      background: isRanked ? "rgba(15,22,43,0.72)" : "rgba(15,22,43,0.55)",
+                      backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+                      border: `1px solid ${isRanked ? color : "rgba(255,255,255,0.1)"}`,
                       boxShadow: isRanked
-                        ? `0 0 0 1px ${col}66, 0 14px 36px -12px ${col}77, inset 0 1px 0 rgba(255,255,255,0.05)`
+                        ? `0 0 0 1px ${color}66, 0 14px 36px -12px ${color}77, inset 0 1px 0 rgba(255,255,255,0.05)`
                         : "0 2px 8px -4px rgba(0,0,0,0.3)",
                       cursor: logging ? "not-allowed" : "pointer"
                     }}>
-              {isRanked && <div key={rank} className="absolute inset-0 pointer-events-none" style={{background:`radial-gradient(ellipse at 10% 50%, ${RANK_COLOR[rank]}22, transparent 55%)`}}/>}
+              {isRanked && <div className="absolute inset-0 pointer-events-none" style={{background:`radial-gradient(ellipse at 10% 50%, ${color}1a, transparent 55%)`}}/>}
 
-              <div className="shrink-0 w-16 h-16 rounded-sm flex flex-col items-center justify-center relative z-10 transition-all"
+              {/* Square rank indicator */}
+              <div className="shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-sm flex items-center justify-center relative z-10 transition-all"
                    style={{
-                     background: isRanked ? `linear-gradient(135deg, ${RANK_COLOR[rank]}22, ${RANK_COLOR[rank]}08)` : "rgba(255,255,255,0.03)",
-                     border: `1px solid ${col}`,
-                     color: isRanked ? RANK_COLOR[rank] : "rgba(255,255,255,0.4)",
-                     boxShadow: isRanked ? `inset 0 0 20px ${RANK_COLOR[rank]}22, 0 0 18px ${RANK_COLOR[rank]}44` : "none"
+                     background: isRanked ? `linear-gradient(135deg, ${color}22, ${color}08)` : "rgba(255,255,255,0.03)",
+                     border: `1px solid ${isRanked ? color : "rgba(255,255,255,0.12)"}`,
+                     boxShadow: isRanked ? `inset 0 0 18px ${color}22, 0 0 18px ${color}77, 0 0 0 3px ${color}15` : "none"
                    }}>
                 {isRanked ? (
-                  <>
-                    <span className="text-[8px] tracking-[0.2em] font-bold opacity-80">RANK</span>
-                    <span className="text-2xl leading-none mt-0.5">{MEDAL[rank]}</span>
-                  </>
+                  <span className="font-display text-3xl md:text-4xl font-black tabular"
+                        style={{ color: color, textShadow: `0 0 14px ${color}cc, 0 0 28px ${color}77` }}>
+                    {rank}
+                  </span>
                 ) : (
-                  <span className="font-display font-bold text-base">{String.fromCharCode(65+i)}</span>
+                  <span className="text-3xl md:text-4xl font-light text-white/25">—</span>
                 )}
               </div>
 
-              <div className="flex-1 relative z-10 min-w-0">
-                {isRanked && (
-                  <div className="font-mono text-[10px] font-bold tracking-[0.2em] mb-1" style={{color: RANK_COLOR[rank]}}>
-                    {MEDAL_LABEL[rank]}
-                  </div>
-                )}
-                <div className="text-[14px] md:text-sm leading-relaxed text-white/95">{opt.text}</div>
-                {!isRanked && (
-                  <div className="font-mono text-[10px] tracking-[0.2em] text-white/40 mt-1 uppercase">
-                    {rankings.length < total ? `TAP TO SET AS ${ordinal(nextRank)}` : "UNRANK ANOTHER TO ASSIGN"}
-                  </div>
-                )}
+              {/* Option text */}
+              <div className="flex-1 text-[14px] md:text-sm leading-relaxed text-white/95 relative z-10">
+                {opt.text}
               </div>
-
-              {isRanked && (
-                <div className="shrink-0 relative z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm font-mono text-[10px] font-bold tracking-[0.2em] uppercase"
-                     style={{color: RANK_COLOR[rank], background: "rgba(4,6,14,0.6)", border: `1px solid ${RANK_COLOR[rank]}55`}}>
-                  CHANGE
-                  <Icon name="close" className="w-3 h-3" stroke={2.4}/>
-                </div>
-              )}
             </button>
           );
         })}
       </div>
 
-      <div className="mt-6 flex items-center justify-end gap-3">
-        <button disabled={!allRanked||logging} onClick={()=>onSubmit(rankings)} className="btn-primary px-8 py-3 font-display text-sm flex items-center gap-2">
+      <div className="mt-5 font-mono text-[10px] tracking-[0.2em] text-white/40 text-center">
+        TAP ANY RANKED OPTION TO UN-RANK IT.
+      </div>
+
+      <div className="mt-6 flex items-center justify-end">
+        <button disabled={!allAssigned||logging} onClick={submit} className="btn-primary px-8 py-3 font-display text-sm flex items-center gap-2">
           <Icon name="check" className="w-4 h-4"/> CONFIRM_PRIORITY
         </button>
       </div>

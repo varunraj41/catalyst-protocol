@@ -195,7 +195,7 @@
   /* ---------- CONSTANTS ---------- */
 
   var CONSTANTS = {
-    L1_TIMER: 15,                  // 15s per L1 scenario
+    L1_TIMER: 20,                  // 20s per L1 scenario
     L2_CARD_TIMER: 15,             // 15s per Character-Mirror card
     L3_TIMER: 25,                  // 25s for ranking
     L4_TIMER: 20,                  // 20s per Mastermind question
@@ -203,7 +203,8 @@
     LOG_MS: 650,
     MIRROR_LEAST_BONUS: 0.2,       // Bonus if BARS-2 card marked Less Like Me
     MIRROR_LEAST_PENALTY: 0.3,     // Penalty if BARS-4 card marked Less Like Me
-    LOW_URGENCY_THRESHOLD_MS: 12000// Flag low urgency if Action-Orientation L1 response > 12s
+    LOW_URGENCY_THRESHOLD_MS: 16000, // Flag low urgency if Action-Orientation L1 response > 16s
+    STORAGE_TTL_MS: 24 * 60 * 60 * 1000 // Candidate localStorage entries expire after 24 hours
   };
 
   /* ---------- META ---------- */
@@ -215,7 +216,8 @@
   };
 
   var LEVEL_META = {
-    1: { key: "explorer",   title: "The Execution Lab", tag: "EXPLORER",   sub: "Tactical Response",
+    1: { key: "explorer",   title: "The Execution Lab",    tag: "EXPLORER",   sub: "Tactical Response",
+         blurb: "React under pressure. Six scenarios probe your tactical instincts across the three drivers.",
          narrative: "You are about to enter a high-fidelity simulation of real-world professional challenges. Each scenario comes with four distinct actions — each one valid, each one mapped to a different behavioral attribute. Trust your first instinct.",
          guidelines: [
            "No right or wrong answers — every option is evaluated through multiple lenses.",
@@ -223,9 +225,15 @@
            "Decisiveness matters — your selections build a high-precision map of your execution signature."
          ]
        },
-    2: { key: "observer",   title: "The Character Mirror", tag: "OBSERVER",   sub: "Behavioral Monitoring",     narrative: "Meet your character. Watch how they handle various work situations. Decide whether each move is More Like You or Less Like You." },
-    3: { key: "strategist", title: "The Strategist",       tag: "STRATEGIST", sub: "Decision & Prioritization", narrative: "Resources are limited. Rank your priorities from highest to lowest." },
-    4: { key: "mastermind", title: "The Mastermind",       tag: "MASTERMIND", sub: "Self-Concept & Motivation", narrative: "Look inward. Which statement truly describes your drive?" }
+    2: { key: "observer",   title: "The Character Mirror", tag: "OBSERVER",   sub: "Behavioral Monitoring",
+         blurb: "Meet Alex or Avantika. Nine cards reveal whether each move is More or Less Like You.",
+         narrative: "Meet your character. Watch how they handle various work situations. Decide whether each move is More Like You or Less Like You." },
+    3: { key: "strategist", title: "The Strategist",       tag: "STRATEGIST", sub: "Decision & Prioritization",
+         blurb: "Resources are scarce. Rank three priorities from top to bottom across three puzzles.",
+         narrative: "Resources are limited. Rank your priorities from highest to lowest." },
+    4: { key: "mastermind", title: "The Mastermind",       tag: "MASTERMIND", sub: "Self-Concept & Motivation",
+         blurb: "Look inward. Three reflections map what really drives your focus and follow-through.",
+         narrative: "Look inward. Which statement truly describes your drive?" }
   };
 
   var FINAL_LEVEL_META = {
@@ -524,16 +532,24 @@
       var raw = window.localStorage && window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return [];
       var parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      if (!Array.isArray(parsed)) return [];
+      // 24-hour TTL — drop stale entries and persist the cleaned list back.
+      var cutoff = Date.now() - CONSTANTS.STORAGE_TTL_MS;
+      var fresh = parsed.filter(function (c) { return !c.savedAt || c.savedAt > cutoff; });
+      if (fresh.length !== parsed.length && window.localStorage) {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+      }
+      return fresh;
     } catch (_) { return []; }
   }
 
   function saveCandidate(candidate) {
     try {
       if (!window.localStorage) return;
+      var entry = Object.assign({}, candidate, { savedAt: Date.now() });
       var existing = loadSavedCandidates();
-      var filtered = existing.filter(function (c) { return c.id !== candidate.id; });
-      filtered.unshift(candidate);
+      var filtered = existing.filter(function (c) { return c.id !== entry.id; });
+      filtered.unshift(entry);
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
     } catch (_) {}
   }
