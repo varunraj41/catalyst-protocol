@@ -1,7 +1,7 @@
 # Catalyst Protocol — Versioned Product Document
 
 **Product:** Catalyst Protocol · Behavioral Simulation for "Drive for Results"
-**Version:** v1.8 · 2026-04-22
+**Version:** v2.0 · 2026-04-22
 **Status:** POC · stable
 **Maintainer:** Hyreo Labs
 
@@ -151,6 +151,21 @@ Additional instrumentation (not flags; shown as signals):
 # 2. Versioned Change Log
 
 Each version below corresponds to a material design or functionality shift. File sizes approximate.
+
+### v2.0 — 2026-04-22 · **Title-First Cards + Square-Box Rank UI**
+- **Adventure intro cards re-stacked** — the title (`The Execution Lab`, `The Character Mirror`, `The Strategist`, `The Mastermind`) is now the **first element** in each card, rendered in 18/20 px Fredoka extrabold with a reserved `min-height: 3rem` so titles that wrap to two lines keep card heights aligned. Below the title: the `[icon] + LEVEL 0N / TAG` row, then the blurb. Visual hierarchy now reads title → category → blurb, matching how users scan the grid.
+- **L3 Strategist — simplest rank UI yet (both themes)** — the "three rank buttons on every card" pattern was still noisy. Replaced with a single **square rank indicator** on the left of each option and the option text on the right. Empty state shows a muted `—`; ranked state shows the number (`1` / `2` / `3`) with a colored glow + text-shadow + inset halo (gold/slate/bronze in Adventure, green/blue/purple in Mission). Interaction is a single click per option:
+  - Unranked option clicked → receives the lowest available rank (1 → 2 → 3)
+  - Ranked option clicked → un-ranks itself (others keep their ranks; the freed slot becomes the next rank for the subsequent click)
+- One hint chip at top of L3 explains exactly what the next click will do (`"Tap options in priority order — next click becomes 2nd"`), flipping to `"✓ All three priorities set — lock it in"` when the set is complete.
+
+### v1.9 — 2026-04-22 · **UX Polish · Focus Mode · 24h TTL · Explicit Rank Buttons**
+- **Adventure intro cards normalized** — all 4 level cards (`L1 Execution Lab`, `L2 Character Mirror`, `L3 Strategist`, `L4 Mastermind`) now use a short equal-length `blurb` (~85 characters each) instead of the full level narrative. Header rearranged: icon and `LEVEL 0N · TAG` text stack sit side-by-side on one row, then a bold title, then the blurb. Equal visual weight across all 4.
+- **Focus Mode during active play** — once a candidate starts the quest (`progressPct != null`), the header no longer shows the theme-switch link or the Manager Portal toggle. Both return once they hit the final results screen or when viewed as Manager. Prevents candidates accidentally jumping out mid-session. Applied to both `adventure.html` and `mission.html`.
+- **L1 timer raised to 20 s** — Execution Lab scenarios now give 20 seconds per decision (was 15 s). Low-urgency threshold shifted to 16 s accordingly so the flag still only fires when candidates linger close to the ceiling. Level intro copy updated to "6 scenarios · 20 seconds each".
+- **L3 Strategist redesigned (clearer mental model)** — the inline "tap the card, get the next rank" pattern was confusing per user feedback. Replaced with **three explicit rank buttons on each option card**: `🥇 1st` / `🥈 2nd` / `🥉 3rd`. Tap one to assign; tapping a rank already owned by another option swaps it onto the new option. Each option card shows the big medal + "1ST PRIORITY" label once ranked, and the 3 rank buttons become filled-state chips. Tooltip explains the swap behavior. Both themes.
+- **localStorage 24-hour TTL** — completed candidate runs are stamped with `savedAt: Date.now()` on write. On load, any entry older than 24 hours is filtered out and the cleaned list is persisted back immediately. Prevents stale demo data from polluting the Manager dashboard after a day. New `STORAGE_TTL_MS` constant.
+- **Index hub simplified** — removed the "Shared Logic Engine · 4-Level Architecture" technical-detail card from `index.html`. Focus stays on the two theme entry points. Footer now reads `v1.9`.
 
 ### v1.8 — 2026-04-22 · **Scene-Change Pill + Stronger Question Transitions**
 - **Scene-change pill** — when the question / card / scenario index advances inside any level, a large centered banner pops in with a spring bounce ("SCENARIO 2/6", "CARD 3/9", "PUZZLE 2/3", "REFLECTION 2/3"), holds ~400 ms, then fades out. Anchored at `top: 28%`, `z-index: 55`, `pointer-events: none` so it never blocks clicks. New `useScenePill(idx)` hook + `SceneChangePill` component in both theme files (Adventure = gradient card, Mission = neon glass).
