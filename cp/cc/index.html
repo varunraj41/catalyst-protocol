@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Catalyst · Choose Your Experience</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(900px 500px at 10% 0%,  #dbe7ff  0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 100%, #ffe6d1 0%, transparent 55%),
+      linear-gradient(180deg, #f8faff 0%, #fff8ee 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: #1e2746;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .card {
+    background: #fff;
+    border: 1px solid rgba(30,39,70,0.08);
+    border-radius: 22px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 24px 60px -20px rgba(30,39,70,0.2);
+    transition: transform 0.3s cubic-bezier(.2,.8,.2,1), box-shadow 0.3s;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 36px 72px -20px rgba(30,39,70,0.28);
+  }
+  .card-mission {
+    background: linear-gradient(135deg, #0a0f1e 0%, #1a1f35 100%);
+    color: #e6ebf5;
+    border: 1px solid rgba(77,159,255,0.28);
+    box-shadow: 0 24px 60px -20px rgba(77,159,255,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-mission::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(77,159,255,0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77,159,255,0.08) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .card-mission::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(600px 300px at 100% 100%, rgba(179,136,255,0.25), transparent 60%);
+    pointer-events: none;
+  }
+  .card-mission:hover {
+    box-shadow: 0 32px 80px -20px rgba(77,159,255,0.55), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+    padding: 4px 10px; border-radius: 999px;
+    background: rgba(99,102,241,0.1); color: #4338ca;
+    border: 1px solid rgba(99,102,241,0.25);
+  }
+  .badge-mission {
+    background: rgba(77,159,255,0.14);
+    color: #7bb8ff;
+    border-color: rgba(77,159,255,0.4);
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 700; letter-spacing: 0.04em;
+    padding: 12px 22px; border-radius: 12px;
+    transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s;
+    text-decoration: none;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-adventure {
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+    color: white;
+    box-shadow: 0 12px 30px -8px rgba(99,102,241,0.5);
+  }
+  .btn-adventure:hover {
+    box-shadow: 0 18px 40px -8px rgba(99,102,241,0.7);
+  }
+  .btn-mission {
+    background: linear-gradient(135deg, #4d9fff, #b388ff);
+    color: white;
+    box-shadow: 0 12px 30px -8px rgba(77,159,255,0.7);
+  }
+  .btn-mission:hover {
+    box-shadow: 0 18px 40px -8px rgba(77,159,255,0.95);
+  }
+  .btn-ghost {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #e6ebf5;
+  }
+  .btn-ghost-light {
+    background: #fff;
+    border: 1px solid rgba(30,39,70,0.12);
+    color: #1e2746;
+  }
+  .gradient-text-adv {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .gradient-text-msn {
+    background: linear-gradient(135deg, #4d9fff 0%, #b388ff 50%, #4ade80 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .pulse-dot {
+    width: 8px; height: 8px; border-radius: 9999px;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.5; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.1); } }
+  .float-logo {
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+</style>
+</head>
+<body>
+<div class="max-w-6xl mx-auto px-6 py-14 md:py-20">
+
+  <header class="text-center mb-14">
+    <div class="inline-flex items-center gap-2 badge mb-5">
+      <span class="pulse-dot" style="background:#10b981;"></span>
+      BEHAVIORAL SIMULATION · POC
+    </div>
+    <h1 class="text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tight" style="font-family:'Fredoka',sans-serif;">
+      Catalyst <span class="gradient-text-adv">Protocol</span>
+    </h1>
+    <p class="mt-5 text-lg md:text-xl text-[#5b6681] max-w-2xl mx-auto leading-relaxed">
+      One shared logic engine. Two distinct experiences. Choose your UI.
+    </p>
+    <div class="mt-4 text-xs mono text-[#9aa3bd] tracking-[0.25em]">
+      3 LEVELS · DRIVE FOR RESULTS · BAND 01 ENGINEER
+    </div>
+  </header>
+
+  <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+
+    <!-- Adventure -->
+    <div class="card p-7 md:p-9 relative overflow-hidden">
+      <div class="absolute -top-20 -right-10 w-64 h-64 rounded-full" style="background:#f3ccff;filter:blur(60px);opacity:0.6;"></div>
+      <div class="relative">
+        <div class="flex items-center justify-between mb-6">
+          <div class="badge" style="background:rgba(16,185,129,0.1);color:#065f46;border-color:rgba(16,185,129,0.3);">
+            <span>🗺️</span> THEME 01 · DEFAULT
+          </div>
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center float-logo"
+               style="background:linear-gradient(135deg,#10b981,#06b6d4);box-shadow:0 14px 30px -8px rgba(16,185,129,0.5);">
+            <span class="text-2xl">🏝️</span>
+          </div>
+        </div>
+
+        <h2 class="text-3xl md:text-4xl font-extrabold leading-tight" style="font-family:'Fredoka',sans-serif;">
+          Adventure <span class="gradient-text-adv">Quest</span>
+        </h2>
+        <p class="mt-3 text-[#5b6681] leading-relaxed">
+          A bright, game-like treasure hunt. Animated journey map, level badges, confetti, encouraging toasts. Built for a warm, reward-driven candidate experience.
+        </p>
+
+        <div class="mt-5 grid grid-cols-3 gap-2 text-center">
+          <div class="rounded-xl py-2.5 px-2 border border-[rgba(30,39,70,0.08)] bg-[#f8faff]">
+            <div class="text-2xl">🧭</div>
+            <div class="text-[10px] font-bold tracking-widest text-[#10b981] mt-1">EXPLORER</div>
+          </div>
+          <div class="rounded-xl py-2.5 px-2 border border-[rgba(30,39,70,0.08)] bg-[#fff7ed]">
+            <div class="text-2xl">♟️</div>
+            <div class="text-[10px] font-bold tracking-widest text-[#f59e0b] mt-1">STRATEGIST</div>
+          </div>
+          <div class="rounded-xl py-2.5 px-2 border border-[rgba(30,39,70,0.08)] bg-[#fdf4ff]">
+            <div class="text-2xl">🔑</div>
+            <div class="text-[10px] font-bold tracking-widest text-[#a855f7] mt-1">MASTERMIND</div>
+          </div>
+        </div>
+
+        <ul class="mt-6 space-y-2 text-sm text-[#1e2746]">
+          <li class="flex items-center gap-2"><span style="color:#10b981;">✓</span> Journey-map progression with pulsing level nodes</li>
+          <li class="flex items-center gap-2"><span style="color:#10b981;">✓</span> Click-to-rank Level 2 (slot-fill animation)</li>
+          <li class="flex items-center gap-2"><span style="color:#10b981;">✓</span> Confetti reveal · positive-only candidate summary</li>
+        </ul>
+
+        <div class="mt-7 flex items-center gap-3 flex-wrap">
+          <a href="adventure.html" class="btn btn-adventure">
+            Enter Adventure
+            <span>→</span>
+          </a>
+          <a href="adventure.html?role=manager" class="btn btn-ghost-light">
+            👔 Manager Portal
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mission Control -->
+    <div class="card card-mission p-7 md:p-9">
+      <div class="relative" style="z-index:2;">
+        <div class="flex items-center justify-between mb-6">
+          <div class="badge badge-mission">
+            <span>🛰️</span> THEME 02 · SYSTEM
+          </div>
+          <div class="w-12 h-12 rounded-2xl flex items-center justify-center float-logo"
+               style="background:linear-gradient(135deg,#4d9fff,#b388ff);box-shadow:0 14px 30px -8px rgba(77,159,255,0.8);">
+            <span class="text-2xl">⚡</span>
+          </div>
+        </div>
+
+        <h2 class="text-3xl md:text-4xl font-extrabold leading-tight" style="font-family:'Orbitron',sans-serif;letter-spacing:-0.01em;">
+          Mission <span class="gradient-text-msn">Control</span>
+        </h2>
+        <p class="mt-3 leading-relaxed" style="color:#b4bfd4;">
+          A production-grade developer console. Matrix rain, glass panels, neon glow, circular timer, drag-and-drop ranking. Immersive, high-focus simulation.
+        </p>
+
+        <div class="mt-5 grid grid-cols-3 gap-2 text-center">
+          <div class="rounded-xl py-2.5 px-2" style="background:rgba(77,159,255,0.06);border:1px solid rgba(77,159,255,0.22);">
+            <div class="text-lg mono" style="color:#4d9fff;">SJT_01</div>
+            <div class="text-[10px] font-bold tracking-widest mt-1" style="color:#7bb8ff;">EXPLORER</div>
+          </div>
+          <div class="rounded-xl py-2.5 px-2" style="background:rgba(179,136,255,0.06);border:1px solid rgba(179,136,255,0.22);">
+            <div class="text-lg mono" style="color:#b388ff;">RANK_02</div>
+            <div class="text-[10px] font-bold tracking-widest mt-1" style="color:#c9aaff;">STRATEGIST</div>
+          </div>
+          <div class="rounded-xl py-2.5 px-2" style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.22);">
+            <div class="text-lg mono" style="color:#4ade80;">WHY_03</div>
+            <div class="text-[10px] font-bold tracking-widest mt-1" style="color:#86efac;">MASTERMIND</div>
+          </div>
+        </div>
+
+        <ul class="mt-6 space-y-2 text-sm" style="color:#d6dbe8;">
+          <li class="flex items-center gap-2"><span style="color:#4ade80;">✓</span> Matrix rain canvas · animated grid · scanlines</li>
+          <li class="flex items-center gap-2"><span style="color:#4ade80;">✓</span> Glass panels · circular countdown · glitch title</li>
+          <li class="flex items-center gap-2"><span style="color:#4ade80;">✓</span> Drag-and-drop ranking · radar dashboard · confetti</li>
+        </ul>
+
+        <div class="mt-7 flex items-center gap-3 flex-wrap">
+          <a href="mission.html" class="btn btn-mission">
+            Enter Mission Control
+            <span>→</span>
+          </a>
+          <a href="mission.html?role=manager" class="btn btn-ghost">
+            👔 Manager Portal
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Architecture note -->
+  <div class="mt-12 card p-6 md:p-7">
+    <div class="flex items-start gap-4 flex-wrap">
+      <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+           style="background:linear-gradient(135deg,#6366f1,#3b82f6);color:white;">
+        <span class="text-xl">🧠</span>
+      </div>
+      <div class="flex-1 min-w-[260px]">
+        <div class="font-bold text-lg">Shared Logic Engine</div>
+        <p class="text-sm text-[#5b6681] mt-1 leading-relaxed">
+          Both UIs consume the same <span class="mono text-[#4338ca]">catalyst-shared.js</span> — level data, scoring (Accountability 0.40 · Action 0.35 · Perseverance 0.25), consistency flag, latency tracking, mock candidate seeds. The Manager dashboard renders with identical professional Inter typography in both files, isolated from the themed candidate UI.
+        </p>
+        <div class="mt-3 flex items-center gap-2 flex-wrap text-[11px] mono text-[#64748b]">
+          <span class="px-2 py-1 rounded-md bg-[#f3f4f6] border border-[#e5e7eb]">catalyst-shared.js</span>
+          <span>→</span>
+          <span class="px-2 py-1 rounded-md bg-[#f3f4f6] border border-[#e5e7eb]">adventure.html</span>
+          <span class="px-2 py-1 rounded-md bg-[#f3f4f6] border border-[#e5e7eb]">mission.html</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-10 text-center text-xs mono text-[#9aa3bd] tracking-[0.25em]">
+    v0.6 · SHARED-ENGINE · NO PERSONAL DATA STORED
+  </footer>
+
+</div>
+</body>
+</html>

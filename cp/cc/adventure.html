@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Catalyst Quest · Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- SHARED LOGIC ENGINE — consumed identically by mission.html -->
+<script src="catalyst-shared.js"></script>
+<style>
+  :root {
+    --ink:       #1e2746;
+    --ink-soft:  #5b6681;
+    --ink-mute:  #9aa3bd;
+    --card:      #ffffff;
+    --line:      rgba(30,39,70,0.08);
+    --line-2:    rgba(30,39,70,0.04);
+    --primary:   #6366f1;
+    --primary-2: #3b82f6;
+    --lvl1-a:    #10b981; --lvl1-b: #06b6d4;
+    --lvl2-a:    #f59e0b; --lvl2-b: #f97316;
+    --lvl3-a:    #a855f7; --lvl3-b: #ec4899;
+    --gold:      #f59e0b;
+    --success:   #10b981;
+    --danger:    #ef4444;
+  }
+  * { box-sizing: border-box; }
+  html, body, #root {
+    background:
+      radial-gradient(1100px 600px at 8% -10%, #dbe7ff 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #ffe6d1 0%, transparent 55%),
+      radial-gradient(900px 500px at 50% 120%, #f3e4ff 0%, transparent 55%),
+      linear-gradient(180deg, #f8faff 0%, #fff8ee 100%);
+    background-attachment: fixed; min-height: 100%;
+  }
+  body { margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  .font-display { font-family: 'Fredoka', 'Inter', sans-serif; letter-spacing: -0.01em; }
+  .font-mono    { font-family: 'JetBrains Mono', monospace; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 14px 40px -18px rgba(30,39,70,0.18), 0 4px 14px -8px rgba(30,39,70,0.08); }
+  .card-soft { background: rgba(255,255,255,0.7); backdrop-filter: blur(12px) saturate(130%); -webkit-backdrop-filter: blur(12px) saturate(130%); border: 1px solid var(--line); border-radius: 18px; }
+
+  .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%); color: white; font-weight: 700; border-radius: 14px; border: none; box-shadow: 0 10px 28px -8px rgba(99,102,241,0.55), inset 0 1px 0 rgba(255,255,255,0.35); transition: all 0.25s cubic-bezier(.2,.8,.2,1); position: relative; overflow: hidden; }
+  .btn-primary::before { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%); transform: translateX(-100%); animation: shimmer 3.8s infinite; }
+  @keyframes shimmer { 0% { transform: translateX(-100%);} 55%,100% { transform: translateX(120%);} }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-2px) scale(1.02); box-shadow: 0 16px 38px -8px rgba(99,102,241,0.7), inset 0 1px 0 rgba(255,255,255,0.5); }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-ghost { background: var(--card); border: 1px solid var(--line); color: var(--ink); border-radius: 12px; font-weight: 600; transition: all 0.2s; }
+  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; background: rgba(99,102,241,0.08); color: var(--primary); border: 1px solid rgba(99,102,241,0.2); }
+
+  .opt { background: #fff; border: 1px solid var(--line); border-radius: 14px; transition: all 0.25s cubic-bezier(.2,.8,.2,1); text-align: left; width: 100%; color: var(--ink); box-shadow: 0 2px 8px -4px rgba(30,39,70,0.08); }
+  .opt:hover:not(:disabled) { transform: translateY(-3px); border-color: rgba(99,102,241,0.45); box-shadow: 0 18px 36px -16px rgba(99,102,241,0.4), 0 6px 14px -8px rgba(30,39,70,0.12); }
+  .opt.active { border-color: var(--success); background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%); box-shadow: 0 0 0 2px rgba(16,185,129,0.35), 0 16px 36px -12px rgba(16,185,129,0.35); animation: pick 0.55s cubic-bezier(.2,1.6,.2,1); }
+  @keyframes pick { 0% { transform: scale(1); } 40% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+  .scene-enter { animation: sceneEnter 0.55s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes sceneEnter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .pop-in { animation: popin 0.6s cubic-bezier(.2,1.6,.2,1) both; }
+  @keyframes popin { 0% { opacity: 0; transform: scale(0.6); } 70% { transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
+  .stagger > * { animation: sceneEnter 0.5s cubic-bezier(.2,.8,.2,1) both; }
+  .stagger > *:nth-child(1) { animation-delay: 0.05s; } .stagger > *:nth-child(2) { animation-delay: 0.15s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.25s; } .stagger > *:nth-child(4) { animation-delay: 0.35s; }
+
+  .slot-fill { animation: slot-fill 0.45s cubic-bezier(.2,1.6,.2,1) both; }
+  @keyframes slot-fill { 0% { transform: translateY(14px) scale(0.94); opacity: 0; } 60% { transform: translateY(-2px) scale(1.03); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+
+  .node-pulse { position: relative; }
+  .node-pulse::after { content: ""; position: absolute; inset: -6px; border-radius: 9999px; border: 3px solid currentColor; animation: nodepulse 1.8s cubic-bezier(.2,.8,.2,1) infinite; opacity: 0.7; }
+  @keyframes nodepulse { 0% { transform: scale(0.85); opacity: 0.75; } 100% { transform: scale(1.45); opacity: 0; } }
+
+  .halo { position: relative; }
+  .halo::before { content: ""; position: absolute; inset: -14px; border-radius: inherit; background: conic-gradient(from 0deg, var(--primary), var(--lvl1-a), var(--lvl2-a), var(--lvl3-b), var(--primary)); filter: blur(16px); opacity: 0.55; z-index: -1; animation: spin 8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .text-gradient { background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 40%, var(--lvl3-b) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  .orb { position: absolute; border-radius: 9999px; filter: blur(80px); pointer-events: none; animation: drift 20s ease-in-out infinite alternate; }
+  @keyframes drift { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(26px,-20px) scale(1.1); } }
+
+  .toast { position: fixed; right: 24px; bottom: 24px; z-index: 60; animation: toast-in 0.3s cubic-bezier(.2,1.4,.2,1) both, toast-out 0.3s ease-in 1.8s both; }
+  @keyframes toast-in  { from { opacity: 0; transform: translateY(14px) scale(0.95); } to { opacity: 1; transform: none; } }
+  @keyframes toast-out { to   { opacity: 0; transform: translateY(-6px); } }
+
+  .tabular { font-variant-numeric: tabular-nums; }
+  .timer-crit { animation: timer-crit 0.7s ease-in-out infinite; }
+  @keyframes timer-crit { 0%,100% { filter: drop-shadow(0 0 4px rgba(239,68,68,0.5)); transform: scale(1); } 50% { filter: drop-shadow(0 0 14px rgba(239,68,68,0.95)); transform: scale(1.05); } }
+
+  .progress-shimmer { background-image: linear-gradient(110deg, rgba(255,255,255,0) 25%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 75%); background-size: 200% 100%; animation: pshimmer 2s linear infinite; }
+  @keyframes pshimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+  .row-hover:hover { background: linear-gradient(90deg, rgba(99,102,241,0.05), rgba(236,72,153,0.03)); }
+
+  /* Manager scope — clean Inter, professional */
+  .manager-scope { font-family: 'Inter', sans-serif; color: var(--ink); }
+  .manager-scope .font-display { font-family: 'Inter', sans-serif; letter-spacing: -0.02em; font-weight: 800; }
+  .manager-scope .text-gradient { background: none; -webkit-background-clip: initial; -webkit-text-fill-color: var(--ink); color: var(--ink); }
+  .manager-scope .halo::before { display: none; }
+
+  ::selection { background: rgba(99,102,241,0.2); }
+  button { cursor: pointer; font-family: inherit; color: inherit; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+const C = window.CatalystCore;
+const { L1, L2, L3, CONSTANTS, LEVEL_META, DIMENSION_LABEL, FINAL_LEVEL_META,
+        LEVEL_SUMMARY, DEV_TIP, STRENGTH_NOTE, POS_SUMMARY, POSITIVE_BULLETS,
+        mockCandidates, computeResults, useCountUp } = C;
+const { L1_TIMER, L2_TIMER, LOG_MS } = CONSTANTS;
+
+/* Adventure level-specific color mapping */
+const LVL_COLORS = {
+  1: ["var(--lvl1-a)", "var(--lvl1-b)", "compass"],
+  2: ["var(--lvl2-a)", "var(--lvl2-b)", "chess"],
+  3: ["var(--lvl3-a)", "var(--lvl3-b)", "key"]
+};
+function levelMeta(n) {
+  const meta = LEVEL_META[n];
+  return { ...meta, icon: LVL_COLORS[n][2], colors: [LVL_COLORS[n][0], LVL_COLORS[n][1]] };
+}
+
+/* =========== ICONS =========== */
+const Icon = ({ name, className = "w-5 h-5", stroke = 1.8 }) => {
+  const p = { fill: "none", stroke: "currentColor", strokeWidth: stroke, strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (name) {
+    case "compass": return <svg viewBox="0 0 24 24" className={className} {...p}><circle cx="12" cy="12" r="9"/><path d="m15 9-2 6-4 2 2-6 4-2Z"/></svg>;
+    case "chess":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M8 22h8M9 18h6M9 18v-2a3 3 0 0 1 6 0v2M12 13V9M8 9h8l-1-3H9l-1 3ZM11 6V3h2v3"/></svg>;
+    case "key":     return <svg viewBox="0 0 24 24" className={className} {...p}><circle cx="8" cy="15" r="4"/><path d="m11 12 10-10M17 6l3 3M14 9l3 3"/></svg>;
+    case "map":     return <svg viewBox="0 0 24 24" className={className} {...p}><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>;
+    case "flag":    return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M4 22V4M4 15h10l-2-3 2-3H4"/></svg>;
+    case "trophy":  return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M7 3h10v5a5 5 0 0 1-10 0V3Z"/><path d="M4 5h3M17 5h3M12 13v4M8 21h8M10 21v-4h4v4"/></svg>;
+    case "star":    return <svg viewBox="0 0 24 24" className={className}><path d="m12 2 2.9 6.9L22 10l-5.5 4.8L18 22l-6-3.5L6 22l1.5-7.2L2 10l7.1-1.1L12 2Z" fill="currentColor"/></svg>;
+    case "sparkles":return <svg viewBox="0 0 24 24" className={className} {...p}><path d="m12 3 1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3ZM5 17l.8 2.2L8 20l-2.2.8L5 23l-.8-2.2L2 20l2.2-.8L5 17Z"/></svg>;
+    case "check":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="m5 12 5 5L20 7"/></svg>;
+    case "lock":    return <svg viewBox="0 0 24 24" className={className} {...p}><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>;
+    case "play":    return <svg viewBox="0 0 24 24" className={className}><path d="m6 4 14 8-14 8V4Z" fill="currentColor"/></svg>;
+    case "arrow-right": return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>;
+    case "restart": return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>;
+    case "user":    return <svg viewBox="0 0 24 24" className={className} {...p}><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>;
+    case "briefcase":return <svg viewBox="0 0 24 24" className={className} {...p}><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>;
+    case "target":  return <svg viewBox="0 0 24 24" className={className} {...p}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>;
+    case "bolt":    return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>;
+    case "shield":  return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 3 4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>;
+    case "heart":   return <svg viewBox="0 0 24 24" className={className}><path d="M12 21s-7-4.5-9.5-9C1 8 3 4 7 4c2 0 3.5 1 5 3 1.5-2 3-3 5-3 4 0 6 4 4.5 8-2.5 4.5-9.5 9-9.5 9Z" fill="currentColor"/></svg>;
+    case "medal":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M8 2 6 6l6 2 6-2-2-4"/><circle cx="12" cy="15" r="6"/></svg>;
+    case "alert":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 3 2 21h20L12 3Z"/><path d="M12 10v5M12 18h.01"/></svg>;
+    case "clock":   return <svg viewBox="0 0 24 24" className={className} {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>;
+    case "close":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="m6 6 12 12M6 18 18 6"/></svg>;
+    case "portal":  return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M15 3h6v6M21 3l-8 8M9 21H3v-6M3 21l8-8"/></svg>;
+    case "download":return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 4v12M6 12l6 6 6-6M4 20h16"/></svg>;
+    default: return null;
+  }
+};
+
+/* =========== BG ORBS =========== */
+function AmbientOrbs() {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      <div className="orb" style={{ width: 520, height: 520, top: "-10%", left: "-8%",   background: "#c7d6ff", opacity: 0.55 }} />
+      <div className="orb" style={{ width: 460, height: 460, bottom: "-10%", right: "-10%", background: "#ffd9bf", opacity: 0.55, animationDelay: "-7s" }} />
+      <div className="orb" style={{ width: 380, height: 380, top: "40%", left: "55%",   background: "#f3ccff", opacity: 0.45, animationDelay: "-13s" }} />
+    </div>
+  );
+}
+
+/* =========== HEADER =========== */
+function AppHeader({ role, onToggleRole, onHome, progressPct, candidateName }) {
+  return (
+    <div className="relative z-20 flex items-center justify-between gap-4 px-4 md:px-6 py-4">
+      <button onClick={onHome} className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center pop-in" style={{ background: "linear-gradient(135deg,#6366f1,#3b82f6)", boxShadow: "0 10px 24px -8px rgba(99,102,241,0.55)" }}>
+          <Icon name="map" className="w-5 h-5 text-white" />
+        </div>
+        <div className="leading-tight text-left">
+          <div className="font-display text-lg font-bold">Catalyst<span className="text-gradient"> Quest</span></div>
+          <div className="text-[11px] text-[var(--ink-soft)] font-medium">{role === "manager" ? "Evaluator Dashboard" : "Adventure · Theme 01"}</div>
+        </div>
+      </button>
+      <div className="flex items-center gap-2 md:gap-3">
+        {role === "candidate" && progressPct != null && (
+          <div className="hidden md:flex items-center gap-3">
+            <span className="text-xs font-semibold text-[var(--ink-soft)]">Journey</span>
+            <div className="w-44 h-2 rounded-full bg-white border border-[var(--line)] overflow-hidden">
+              <div className="h-full rounded-full relative" style={{ width: progressPct + "%", background: "linear-gradient(90deg,#10b981,#f59e0b,#a855f7)", transition: "width .6s cubic-bezier(.2,.8,.2,1)" }}>
+                <div className="absolute inset-0 progress-shimmer" />
+              </div>
+            </div>
+            <span className="text-xs font-bold tabular">{Math.round(progressPct)}%</span>
+          </div>
+        )}
+        {candidateName && (
+          <span className="chip hidden sm:inline-flex" style={{ background: "rgba(16,185,129,0.08)", color: "#065f46", borderColor: "rgba(16,185,129,0.3)" }}>
+            <Icon name="user" className="w-3.5 h-3.5" /> {candidateName}
+          </span>
+        )}
+        {role === "candidate" && (
+          <a href="mission.html" className="btn-ghost px-3 py-2 text-xs flex items-center gap-1.5" title="Switch to Mission Control theme">
+            🛰️ <span className="hidden md:inline">Mission Theme</span>
+          </a>
+        )}
+        <button onClick={onToggleRole} className="btn-ghost px-3.5 py-2 text-xs md:text-sm flex items-center gap-2">
+          <Icon name={role === "candidate" ? "briefcase" : "user"} className="w-4 h-4" />
+          <span className="hidden sm:inline">{role === "candidate" ? "Manager Portal" : "Candidate View"}</span>
+          <Icon name="portal" className="w-3.5 h-3.5 opacity-60" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* =========== TOAST =========== */
+function Toast({ message, tone = "primary" }) {
+  const tones = {
+    primary: { bg: "linear-gradient(135deg,#6366f1,#3b82f6)", icon: "check" },
+    success: { bg: "linear-gradient(135deg,#10b981,#06b6d4)", icon: "check" },
+    warn:    { bg: "linear-gradient(135deg,#f59e0b,#f97316)", icon: "bolt" },
+    purple:  { bg: "linear-gradient(135deg,#a855f7,#ec4899)", icon: "sparkles" }
+  };
+  const t = tones[tone] || tones.primary;
+  return (
+    <div className="toast">
+      <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-white font-semibold text-sm" style={{ background: t.bg, boxShadow: "0 18px 40px -14px rgba(99,102,241,0.55)" }}>
+        <Icon name={t.icon} className="w-4 h-4" />
+        <span>{message}</span>
+      </div>
+    </div>
+  );
+}
+
+/* =========== CIRCULAR TIMER =========== */
+function CircularTimer({ value, max, size = 64, colors = ["#6366f1","#3b82f6"] }) {
+  const r = size/2 - 5;
+  const C2 = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(1, value / max));
+  const off = C2 * (1 - pct);
+  const crit = value <= 3;
+  const stroke = crit ? "#ef4444" : colors[0];
+  return (
+    <div className={"relative " + (crit ? "timer-crit" : "")} style={{ width: size, height: size }}>
+      <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full -rotate-90">
+        <defs>
+          <linearGradient id={`tg-${size}`} x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%"  stopColor={crit ? "#ef4444" : colors[0]} />
+            <stop offset="100%" stopColor={crit ? "#f59e0b" : colors[1]} />
+          </linearGradient>
+        </defs>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(30,39,70,0.08)" strokeWidth="4" />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={`url(#tg-${size})`} strokeWidth="4" strokeLinecap="round" strokeDasharray={C2} strokeDashoffset={off} style={{ transition: "stroke-dashoffset 100ms linear" }} />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="font-display text-lg font-bold tabular" style={{ color: stroke }}>{Math.ceil(value)}</span>
+      </div>
+    </div>
+  );
+}
+
+/* =========== INTRO =========== */
+function Intro({ onStart }) {
+  const [name, setName] = useState("");
+  const canStart = name.trim().length >= 2;
+  return (
+    <div className="scene-enter max-w-5xl mx-auto px-4 md:px-8 py-8">
+      <div className="text-center">
+        <div className="chip mb-5 pop-in">
+          <Icon name="sparkles" className="w-3.5 h-3.5" />
+          A GAMIFIED BEHAVIORAL ADVENTURE
+        </div>
+        <h1 className="font-display text-5xl md:text-7xl font-extrabold leading-[0.95] mb-4">
+          Begin the <span className="text-gradient">Catalyst Quest</span>
+        </h1>
+        <p className="text-lg text-[var(--ink-soft)] max-w-2xl mx-auto">
+          Three levels. Three missions. Every choice shapes the kind of builder you are.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 mt-10 stagger">
+        {[1,2,3].map(n => {
+          const m = levelMeta(n);
+          return (
+            <div key={n} className="card p-5 relative overflow-hidden">
+              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20" style={{ background: `linear-gradient(135deg, ${m.colors[0]}, ${m.colors[1]})` }} />
+              <div className="relative">
+                <div className="flex items-center justify-between">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shadow-lg" style={{ background: `linear-gradient(135deg, ${m.colors[0]}, ${m.colors[1]})` }}>
+                    <Icon name={m.icon} className="w-5 h-5" />
+                  </div>
+                  <span className="font-mono text-[10px] tracking-widest text-[var(--ink-mute)]">LEVEL 0{n}</span>
+                </div>
+                <div className="mt-3 font-display text-xl font-bold">{m.title}</div>
+                <div className="text-xs font-semibold" style={{ color: m.colors[0] }}>{m.tag}</div>
+                <p className="text-sm text-[var(--ink-soft)] mt-2 leading-relaxed">{m.narrative}</p>
+                <div className="mt-3 text-[11px] font-semibold text-[var(--ink-mute)] tracking-wider uppercase">{m.sub}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-10 max-w-xl mx-auto card p-6 md:p-7">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon name="user" className="w-4 h-4 text-[var(--primary)]" />
+          <span className="font-semibold text-sm">Before we begin, who's the operator?</span>
+        </div>
+        <input autoFocus value={name} onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && canStart) onStart(name.trim()); }} placeholder="Enter your name"
+          className="w-full px-4 py-3.5 rounded-xl border-2 text-base font-medium transition"
+          style={{ borderColor: "var(--line)", background: "#fafbff" }}
+          onFocus={e => e.target.style.borderColor = "var(--primary)"} onBlur={e => e.target.style.borderColor = "var(--line)"} />
+        <button disabled={!canStart} onClick={() => onStart(name.trim())} className="btn-primary w-full mt-4 px-6 py-4 text-base font-display flex items-center justify-center gap-2">
+          <Icon name="play" className="w-4 h-4" /> Start the Quest <Icon name="arrow-right" className="w-4 h-4" />
+        </button>
+        <div className="text-center text-xs text-[var(--ink-mute)] mt-3">Estimated time · 4 minutes</div>
+      </div>
+    </div>
+  );
+}
+
+/* =========== JOURNEY MAP =========== */
+function JourneyMap({ currentLevel, completed, onEnter, candidateName }) {
+  const nodes = [{ n: 1, x: 180, y: 190 }, { n: 2, x: 500, y: 90 }, { n: 3, x: 820, y: 190 }];
+  const W = 1000, H = 280;
+  const pathD = `M 60 210 Q 140 210 ${nodes[0].x} ${nodes[0].y} C ${nodes[0].x + 120} ${nodes[0].y - 60}, ${nodes[1].x - 120} ${nodes[1].y - 20}, ${nodes[1].x} ${nodes[1].y} C ${nodes[1].x + 120} ${nodes[1].y + 60}, ${nodes[2].x - 120} ${nodes[2].y - 60}, ${nodes[2].x} ${nodes[2].y} Q ${W - 140} 210 ${W - 60} 210`;
+  const progress = completed.length === 0 ? 0.12 : completed.length === 1 ? 0.42 : completed.length === 2 ? 0.74 : 1.0;
+  const nextMsg = completed.length === 0 ? "Your adventure begins here." : completed.length === 1 ? "Great progress — Strategist awaits." : completed.length === 2 ? "One more challenge to claim your summit." : "All missions complete.";
+
+  return (
+    <div className="scene-enter max-w-6xl mx-auto px-4 md:px-8 py-6">
+      <div className="text-center mb-6">
+        <div className="chip mb-3"><Icon name="map" className="w-3.5 h-3.5" /> JOURNEY MAP</div>
+        <h2 className="font-display text-3xl md:text-4xl font-bold">
+          {completed.length === 0 ? "Welcome" : completed.length === 3 ? "Adventure Complete" : "Onward"}, <span className="text-gradient">{candidateName || "Traveler"}</span>
+        </h2>
+        <p className="text-[var(--ink-soft)] mt-1">{nextMsg}</p>
+      </div>
+
+      <div className="card p-4 md:p-6 relative overflow-hidden">
+        <div className="orb absolute -top-10 left-1/3 w-72 h-72" style={{ background: "#d7e4ff", opacity: 0.7 }} />
+        <div className="orb absolute -bottom-16 right-0 w-80 h-80" style={{ background: "#ffe0bf", opacity: 0.55, animationDelay: "-10s" }} />
+
+        <div className="relative">
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: "auto" }}>
+            <defs>
+              <linearGradient id="pathGrad" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%"   stopColor="#10b981" />
+                <stop offset="50%"  stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#a855f7" />
+              </linearGradient>
+            </defs>
+            <path d={pathD} fill="none" stroke="rgba(30,39,70,0.12)" strokeWidth="6" strokeLinecap="round" strokeDasharray="2 14" />
+            <path d={pathD} fill="none" stroke="url(#pathGrad)" strokeWidth="6" strokeLinecap="round" pathLength="1" strokeDasharray="1" strokeDashoffset={1 - progress}
+                  style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1)", filter: "drop-shadow(0 4px 10px rgba(99,102,241,0.22))" }} />
+            <g transform="translate(40 200)"><circle cx="0" cy="0" r="18" fill="#fff" stroke="rgba(30,39,70,0.15)" /><text x="0" y="5" textAnchor="middle" fontSize="18">🏁</text></g>
+            <g transform={`translate(${W - 40} 200)`}><circle cx="0" cy="0" r="18" fill="#fff" stroke="rgba(30,39,70,0.15)" /><text x="0" y="5" textAnchor="middle" fontSize="18">🏆</text></g>
+          </svg>
+
+          <div className="absolute inset-0">
+            {nodes.map(nd => {
+              const m = levelMeta(nd.n);
+              const isDone    = completed.includes(nd.n);
+              const isCurrent = currentLevel === nd.n && !isDone;
+              const isLocked  = !isDone && !isCurrent;
+              return (
+                <button key={nd.n} disabled={!isCurrent} onClick={() => isCurrent && onEnter(nd.n)}
+                        className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: (nd.x / W) * 100 + "%", top: (nd.y / H) * 100 + "%" }}>
+                  <div className={"relative w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center transition-transform " + (isCurrent ? "scale-110 node-pulse " : "") + (isLocked ? "opacity-70 " : "")}
+                       style={{ background: isLocked ? "#fff" : `linear-gradient(135deg, ${m.colors[0]}, ${m.colors[1]})`, border: "3px solid #fff", color: isLocked ? "var(--ink-mute)" : "#fff", boxShadow: isLocked ? "0 6px 18px -8px rgba(30,39,70,0.2), inset 0 0 0 2px rgba(30,39,70,0.08)" : `0 16px 30px -8px ${m.colors[1]}88, inset 0 1px 0 rgba(255,255,255,0.4)` }}>
+                    <Icon name={isLocked ? "lock" : m.icon} className="w-7 h-7 md:w-8 md:h-8" stroke={2.2} />
+                    {isDone && (
+                      <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[var(--success)] text-white flex items-center justify-center border-2 border-white pop-in" style={{ boxShadow: "0 6px 18px -6px #10b98188" }}>
+                        <Icon name="check" className="w-4 h-4" stroke={3} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 text-center">
+                    <div className="font-mono text-[10px] tracking-widest font-bold" style={{ color: m.colors[0] }}>LEVEL 0{nd.n}</div>
+                    <div className="font-display font-bold text-sm md:text-base">{m.title}</div>
+                    <div className="text-[11px] text-[var(--ink-mute)]">{m.sub}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-8 flex items-center justify-center">
+          {currentLevel && completed.length < 3 ? (
+            <button onClick={() => onEnter(currentLevel)} className="btn-primary px-7 py-3.5 font-display text-base flex items-center gap-2">
+              <Icon name="play" className="w-4 h-4" /> Enter Level {currentLevel}: {levelMeta(currentLevel).title} <Icon name="arrow-right" className="w-4 h-4" />
+            </button>
+          ) : completed.length === 3 ? (
+            <button onClick={() => onEnter("reveal")} className="btn-primary px-7 py-3.5 font-display text-base flex items-center gap-2">
+              <Icon name="sparkles" className="w-4 h-4" /> Reveal My Story
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========== LEVEL INTRO =========== */
+function LevelIntro({ levelNum, onBegin }) {
+  const m = levelMeta(levelNum);
+  return (
+    <div className="scene-enter max-w-3xl mx-auto px-4 md:px-8 py-10">
+      <div className="card p-8 md:p-12 relative overflow-hidden text-center">
+        <div className="orb absolute -top-20 -left-16 w-72 h-72" style={{ background: m.colors[0], opacity: 0.25 }} />
+        <div className="orb absolute -bottom-16 -right-10 w-72 h-72" style={{ background: m.colors[1], opacity: 0.25, animationDelay: "-7s" }} />
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 chip mb-5 pop-in" style={{ background: m.colors[0] + "18", color: m.colors[0], borderColor: m.colors[0] + "55" }}>
+            <Icon name="flag" className="w-3.5 h-3.5" /> LEVEL 0{levelNum} · {m.tag}
+          </div>
+          <div className="inline-flex items-center justify-center w-24 h-24 md:w-28 md:h-28 rounded-3xl text-white mb-5 pop-in halo"
+               style={{ background: `linear-gradient(135deg, ${m.colors[0]}, ${m.colors[1]})`, boxShadow: `0 22px 50px -10px ${m.colors[1]}99` }}>
+            <Icon name={m.icon} className="w-12 h-12 md:w-14 md:h-14" stroke={2.2} />
+          </div>
+          <h1 className="font-display text-4xl md:text-5xl font-extrabold">{m.title}</h1>
+          <div className="mt-2 font-semibold text-sm tracking-widest uppercase" style={{ color: m.colors[0] }}>{m.sub}</div>
+          <p className="text-lg text-[var(--ink-soft)] mt-6 max-w-xl mx-auto leading-relaxed">"{m.narrative}"</p>
+          <div className="mt-8">
+            <button onClick={onBegin} className="btn-primary px-8 py-3.5 font-display text-base flex items-center gap-2 mx-auto" style={{ background: `linear-gradient(135deg, ${m.colors[0]}, ${m.colors[1]})`, boxShadow: `0 14px 32px -10px ${m.colors[1]}aa` }}>
+              <Icon name="play" className="w-4 h-4" /> Begin Level {levelNum}
+            </button>
+            <div className="mt-4 text-xs text-[var(--ink-mute)]">
+              {levelNum === 1 && "3 challenges · 12 seconds each"}
+              {levelNum === 2 && "2 strategic puzzles · 20 seconds each"}
+              {levelNum === 3 && "3 reflection prompts · take your time"}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========== LEVEL 1 — EXPLORER =========== */
+function Level1Screen({ idx, total, scenario, timeLeft, onSelect, logging, lastPicked, progressPct }) {
+  return (
+    <div className="scene-enter max-w-5xl mx-auto px-4 md:px-8 py-6">
+      <div className="card-soft p-4 mb-5 flex items-center gap-4">
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: "linear-gradient(135deg,var(--lvl1-a),var(--lvl1-b))" }}>
+          <Icon name="compass" className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-display font-bold">Level 1 · Explorer</span>
+            <span className="chip" style={{ background: "rgba(16,185,129,0.08)", color: "#065f46", borderColor: "rgba(16,185,129,0.3)" }}>Challenge {idx + 1} / {total}</span>
+          </div>
+          <div className="mt-1.5 h-1.5 w-full rounded-full bg-[var(--line-2)] overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: progressPct + "%", background: "linear-gradient(90deg,var(--lvl1-a),var(--lvl1-b))", transition: "width .6s cubic-bezier(.2,.8,.2,1)" }} />
+          </div>
+        </div>
+        <CircularTimer value={timeLeft} max={L1_TIMER} colors={["#10b981","#06b6d4"]} />
+      </div>
+
+      <div className="grid lg:grid-cols-5 gap-5 items-start">
+        <div className="lg:col-span-3 card p-5 md:p-7 relative overflow-hidden">
+          <div className="orb absolute -top-12 -right-12 w-56 h-56" style={{ background: "#c7f0e0", opacity: 0.6 }} />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 rounded-full bg-[var(--lvl1-a)] animate-pulse" />
+              <div className="text-xs font-mono tracking-widest text-[var(--lvl1-a)]">SYSTEM ALERT</div>
+              <div className="ml-auto chip" style={{ background: "#ecfdf5", color: "#065f46", borderColor: "#a7f3d0" }}><Icon name="bolt" className="w-3 h-3" /> LIVE</div>
+            </div>
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg" style={{ background: "linear-gradient(135deg,var(--lvl1-a),var(--lvl1-b))" }}>
+                <span className="font-display font-bold">AR</span>
+              </div>
+              <div className="flex-1">
+                <div className="text-sm font-bold mb-1">ARIA · Mission Bot</div>
+                <div className="text-base md:text-lg leading-relaxed">{scenario.bot}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-2">
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <Icon name="target" className="w-4 h-4 text-[var(--ink-soft)]" />
+            <span className="text-xs font-semibold tracking-widest text-[var(--ink-soft)]">CHOOSE YOUR MOVE</span>
+          </div>
+          <div className="stagger space-y-3">
+            {scenario.options.map((opt, i) => {
+              const isPicked = lastPicked && lastPicked.text === opt.text;
+              return (
+                <button key={i} disabled={logging} onClick={() => onSelect(opt)} className={"opt p-4 " + (isPicked ? "active" : "")}>
+                  <div className="flex items-start gap-3">
+                    <div className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center font-display font-bold text-sm border-2" style={{ borderColor: isPicked ? "var(--success)" : "var(--line)", color: isPicked ? "var(--success)" : "var(--lvl1-a)", background: isPicked ? "#ecfdf5" : "#f0fdfa" }}>
+                      {String.fromCharCode(65 + i)}
+                    </div>
+                    <div className="text-[14px] leading-relaxed">{opt.text}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========== LEVEL 2 — STRATEGIST (click-to-rank) =========== */
+function Level2Screen({ idx, total, scenario, timeLeft, onSubmit, logging, progressPct, onOrderChange }) {
+  const [rankings, setRankings] = useState([]);
+  useEffect(() => { setRankings([]); }, [scenario.id]);
+  useEffect(() => { onOrderChange && onOrderChange(rankings); }, [rankings]);
+  const totalSlots = scenario.options.length;
+  const allRanked = rankings.length === totalSlots;
+  const nextRank = rankings.length + 1;
+  const assign = (optIdx) => { if (logging || rankings.includes(optIdx) || rankings.length >= totalSlots) return; setRankings(prev => [...prev, optIdx]); };
+  const clearFrom = (pos) => { if (logging) return; setRankings(prev => prev.slice(0, pos)); };
+  const RANK_META = [
+    { medal: "🥇", label: "1st Priority", color: "#d97706", lightBg: "#fffbeb", border: "#f59e0b" },
+    { medal: "🥈", label: "2nd Priority", color: "#475569", lightBg: "#f8fafc", border: "#94a3b8" },
+    { medal: "🥉", label: "3rd Priority", color: "#a16207", lightBg: "#fef9c3", border: "#ca8a04" }
+  ];
+  const ordinal = n => n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`;
+  const promptText = allRanked ? "All priorities set — lock it in to proceed." : `Now select your ${ordinal(nextRank)} priority.`;
+  const available = scenario.options.map((_, i) => i).filter(i => !rankings.includes(i));
+
+  return (
+    <div className="scene-enter max-w-4xl mx-auto px-4 md:px-8 py-6">
+      <div className="card-soft p-4 mb-5 flex items-center gap-4">
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: "linear-gradient(135deg,var(--lvl2-a),var(--lvl2-b))" }}>
+          <Icon name="chess" className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-display font-bold">Level 2 · Strategist</span>
+            <span className="chip" style={{ background: "#fff7ed", color: "#9a3412", borderColor: "#fed7aa" }}>Puzzle {idx + 1} / {total}</span>
+          </div>
+          <div className="mt-1.5 h-1.5 w-full rounded-full bg-[var(--line-2)] overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: progressPct + "%", background: "linear-gradient(90deg,var(--lvl2-a),var(--lvl2-b))", transition: "width .6s cubic-bezier(.2,.8,.2,1)" }} />
+          </div>
+        </div>
+        <CircularTimer value={timeLeft} max={L2_TIMER} colors={["#f59e0b","#f97316"]} />
+      </div>
+
+      <div className="card p-5 md:p-6 mb-5 relative overflow-hidden">
+        <div className="orb absolute -bottom-16 -right-10 w-60 h-60" style={{ background: "#ffe0bf", opacity: 0.6 }} />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="target" className="w-4 h-4 text-[var(--lvl2-a)]" />
+            <div className="text-xs font-bold tracking-widest text-[var(--lvl2-a)] uppercase">Strategic Choice</div>
+          </div>
+          <div className="text-base md:text-lg leading-relaxed">{scenario.situation}</div>
+        </div>
+      </div>
+
+      <div className="mb-4 flex items-center justify-center">
+        <div className="chip text-sm px-4 py-2" style={{ background: allRanked ? "rgba(16,185,129,0.12)" : "rgba(245,158,11,0.12)", color: allRanked ? "#065f46" : "#92400e", borderColor: allRanked ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)" }}>
+          {allRanked ? <Icon name="check" className="w-4 h-4"/> : <Icon name="target" className="w-4 h-4"/>}
+          <span className="font-semibold">{promptText}</span>
+        </div>
+      </div>
+
+      <div className="space-y-3 mb-6">
+        {RANK_META.slice(0, totalSlots).map((rm, pos) => {
+          const filled = pos < rankings.length;
+          const opt = filled ? scenario.options[rankings[pos]] : null;
+          const isNext = pos === rankings.length && !allRanked;
+          return (
+            <div key={pos} className={"rounded-2xl transition-all flex items-center gap-4 p-4 md:p-5 " + (filled ? "bg-white border-2 " : isNext ? "bg-white/90 border-2 border-dashed " : "bg-white/40 border-2 border-dashed opacity-70 ")}
+                 style={{ borderColor: filled ? rm.border : isNext ? rm.color : "rgba(30,39,70,0.15)", boxShadow: filled ? `0 10px 24px -10px ${rm.color}55` : "none" }}>
+              <div className="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center text-3xl" style={{ background: filled ? `linear-gradient(135deg, ${rm.lightBg}, #fff)` : "#f8fafc", border: `2px solid ${filled ? rm.border : "rgba(30,39,70,0.1)"}`, filter: filled ? "none" : "grayscale(0.4) opacity(0.7)" }}>
+                {rm.medal}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-bold tracking-[0.15em] uppercase" style={{ color: rm.color }}>{rm.label}</div>
+                {filled ? (
+                  <div key={rankings[pos]} className="text-[14px] md:text-[15px] leading-snug mt-1 slot-fill">{opt.text}</div>
+                ) : (
+                  <div className="text-sm text-[var(--ink-mute)] mt-1">{isNext ? "Tap an option below to place here" : "Locked until earlier ranks are set"}</div>
+                )}
+              </div>
+              {filled && (
+                <button onClick={() => clearFrom(pos)} disabled={logging} className="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center border border-[var(--line)] bg-white text-[var(--ink-mute)] hover:border-[var(--danger)] hover:text-[var(--danger)] transition disabled:opacity-40" title="Change this ranking">
+                  <Icon name="close" className="w-4 h-4" stroke={2.2} />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {!allRanked && (
+        <div>
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <Icon name="target" className="w-4 h-4 text-[var(--ink-soft)]" />
+            <span className="text-xs font-semibold tracking-widest text-[var(--ink-soft)]">OPTIONS · PICK FOR {ordinal(nextRank).toUpperCase()} PRIORITY</span>
+          </div>
+          <div className="stagger space-y-3">
+            {available.map(i => {
+              const opt = scenario.options[i];
+              return (
+                <button key={i} disabled={logging} onClick={() => assign(i)} className="opt p-4 md:p-5 flex items-start gap-3 w-full">
+                  <div className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-display font-bold text-sm border-2" style={{ borderColor: "var(--lvl2-a)", color: "var(--lvl2-a)", background: "#fff7ed" }}>
+                    {String.fromCharCode(65 + i)}
+                  </div>
+                  <div className="flex-1 text-[14px] md:text-[15px] leading-relaxed">{opt.text}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-6 flex items-center justify-end">
+        <button onClick={() => onSubmit(rankings)} disabled={!allRanked || logging} className="btn-primary px-7 py-3 font-display flex items-center gap-2"
+                style={allRanked ? { background: "linear-gradient(135deg,var(--lvl2-a),var(--lvl2-b))", boxShadow: "0 14px 30px -8px rgba(245,158,11,0.6)" } : undefined}>
+          <Icon name="check" className="w-4 h-4" /> Lock In Priority
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* =========== LEVEL 3 — MASTERMIND =========== */
+function Level3Screen({ idx, total, question, onSelect, logging, lastPicked, progressPct }) {
+  return (
+    <div className="scene-enter max-w-4xl mx-auto px-4 md:px-8 py-6">
+      <div className="card-soft p-4 mb-5 flex items-center gap-4">
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: "linear-gradient(135deg,var(--lvl3-a),var(--lvl3-b))" }}>
+          <Icon name="key" className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-display font-bold">Level 3 · Mastermind</span>
+            <span className="chip" style={{ background: "#fdf4ff", color: "#86198f", borderColor: "#f0abfc" }}>Reflection {idx + 1} / {total}</span>
+          </div>
+          <div className="mt-1.5 h-1.5 w-full rounded-full bg-[var(--line-2)] overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: progressPct + "%", background: "linear-gradient(90deg,var(--lvl3-a),var(--lvl3-b))", transition: "width .6s cubic-bezier(.2,.8,.2,1)" }} />
+          </div>
+        </div>
+        <div className="chip" style={{ background: "#fdf4ff", color: "#86198f", borderColor: "#f0abfc" }}>
+          <Icon name="heart" className="w-3 h-3" /> REFLECT
+        </div>
+      </div>
+
+      <div className="card p-6 md:p-10 mb-5 relative overflow-hidden text-center">
+        <div className="orb absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80" style={{ background: "#f3ccff", opacity: 0.7 }} />
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 chip mb-4" style={{ background: "rgba(168,85,247,0.08)", color: "var(--lvl3-a)", borderColor: "rgba(168,85,247,0.3)" }}>
+            <Icon name="sparkles" className="w-3.5 h-3.5" /> WHY BEHIND THE WHAT
+          </div>
+          <div className="font-display text-xl md:text-3xl leading-snug max-w-2xl mx-auto">{question.question}</div>
+        </div>
+      </div>
+
+      <div className="stagger grid md:grid-cols-2 gap-4">
+        {question.options.map((opt, i) => {
+          const isPicked = lastPicked && lastPicked.text === opt.text;
+          return (
+            <button key={i} disabled={logging} onClick={() => onSelect(opt)} className={"opt p-5 md:p-6 h-full " + (isPicked ? "active" : "")}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs font-bold tracking-widest uppercase" style={{ color: isPicked ? "var(--success)" : "var(--lvl3-a)" }}>Choice · {String.fromCharCode(65 + i)}</div>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center border border-[var(--line)] text-[var(--ink-mute)] font-semibold text-xs">{i + 1}</div>
+              </div>
+              <div className="text-[15px] leading-relaxed">{opt.text}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* =========== LEVEL COMPLETE + CONFETTI =========== */
+function ConfettiBurst({ show, colors = ["#10b981","#06b6d4","#f59e0b","#a855f7","#ec4899"] }) {
+  const parts = useMemo(() => {
+    if (!show) return [];
+    return Array.from({ length: 90 }, (_, i) => ({
+      id: i, angle: Math.random() * Math.PI * 2, dist: 180 + Math.random() * 400,
+      delay: Math.random() * 0.3, duration: 1.4 + Math.random() * 1.6,
+      size: 5 + Math.random() * 8, color: colors[Math.floor(Math.random() * colors.length)]
+    }));
+  }, [show]);
+  if (!show) return null;
+  return (
+    <div className="pointer-events-none fixed inset-0 flex items-start justify-center z-40">
+      <style>{`@keyframes confetti-fly { 0% { transform: translate(0,0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) rotate(900deg); opacity: 0; } }`}</style>
+      <div className="relative top-[22vh]">
+        {parts.map(p => {
+          const tx = Math.cos(p.angle) * p.dist; const ty = Math.sin(p.angle) * p.dist + 160;
+          return <span key={p.id} style={{ position: "absolute", width: p.size, height: p.size, background: p.color, borderRadius: Math.random() > 0.5 ? "3px" : "9999px", boxShadow: `0 0 10px ${p.color}99`, animation: `confetti-fly ${p.duration}s cubic-bezier(.1,.7,.2,1) ${p.delay}s forwards`, ["--tx"]: `${tx}px`, ["--ty"]: `${ty}px` }} />;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function LevelCompleteView({ levelNum, onContinue, candidateName }) {
+  const m = levelMeta(levelNum);
+  return (
+    <div className="scene-enter max-w-3xl mx-auto px-4 md:px-8 py-10 text-center">
+      <ConfettiBurst show colors={[m.colors[0], m.colors[1], "#f59e0b", "#fbbf24"]} />
+      <div className="chip mb-4 pop-in" style={{ background: m.colors[0] + "18", color: m.colors[0], borderColor: m.colors[0] + "55" }}>
+        <Icon name="trophy" className="w-3.5 h-3.5" /> LEVEL {levelNum} COMPLETE
+      </div>
+      <h1 className="font-display text-4xl md:text-6xl font-extrabold">
+        <span className="text-gradient">Well done,</span>
+        <br />
+        <span>{candidateName || "Traveler"}.</span>
+      </h1>
+      <div className="mt-8 flex justify-center">
+        <div className="relative halo">
+          <div className="w-36 h-36 rounded-3xl flex items-center justify-center text-white pop-in" style={{ background: `linear-gradient(135deg, ${m.colors[0]}, ${m.colors[1]})`, boxShadow: `0 28px 60px -12px ${m.colors[1]}aa` }}>
+            <Icon name={m.icon} className="w-16 h-16" stroke={2.2} />
+          </div>
+        </div>
+      </div>
+      <div className="mt-5">
+        <div className="font-display text-2xl font-bold">{m.tag} BADGE EARNED</div>
+        <div className="mt-1 text-[var(--ink-soft)]">{levelNum < 3 ? "Next challenge unlocked." : "All badges claimed — your story awaits."}</div>
+      </div>
+      <div className="mt-10">
+        <button onClick={onContinue} className="btn-primary px-7 py-3.5 font-display text-base flex items-center gap-2 mx-auto" style={{ background: `linear-gradient(135deg, ${m.colors[0]}, ${m.colors[1]})`, boxShadow: `0 16px 40px -10px ${m.colors[1]}99` }}>
+          {levelNum < 3 ? <><Icon name="arrow-right" className="w-4 h-4" /> Continue</> : <><Icon name="sparkles" className="w-4 h-4" /> See Your Story</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* =========== CANDIDATE FINAL (POSITIVE ONLY) =========== */
+function CandidateFinalView({ name, result, onRestart, onPortal }) {
+  const [reveal, setReveal] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReveal(true), 400); return () => clearTimeout(t); }, []);
+  return (
+    <div className="scene-enter max-w-4xl mx-auto px-4 md:px-8 py-8">
+      <ConfettiBurst show={reveal} />
+      <div className="text-center mb-8">
+        <div className="chip mb-3"><Icon name="sparkles" className="w-3.5 h-3.5" /> MISSION COMPLETE</div>
+        <h1 className="font-display text-4xl md:text-6xl font-extrabold">Nice work, <span className="text-gradient">{name}</span>.</h1>
+        <p className="text-lg text-[var(--ink-soft)] mt-2">You completed every level of the Catalyst Quest.</p>
+      </div>
+
+      <div className="card p-6 md:p-8 mb-6 relative overflow-hidden">
+        <div className="orb absolute -top-16 -right-10 w-72 h-72" style={{ background: "#ffe0bf", opacity: 0.6 }} />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-5">
+            <Icon name="medal" className="w-5 h-5 text-[var(--gold)]" />
+            <div className="font-display font-bold text-lg">Badges Earned</div>
+            <div className="ml-auto chip" style={{ background: "rgba(245,158,11,0.1)", color: "#92400e", borderColor: "rgba(245,158,11,0.3)" }}>3 of 3</div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {[1,2,3].map((n, i) => {
+              const m = levelMeta(n);
+              return (
+                <div key={n} className="text-center pop-in" style={{ animationDelay: `${i * 150}ms` }}>
+                  <div className="relative inline-block">
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-3xl flex items-center justify-center text-white shadow-lg mx-auto" style={{ background: `linear-gradient(135deg, ${m.colors[0]}, ${m.colors[1]})`, boxShadow: `0 18px 36px -10px ${m.colors[1]}88` }}>
+                      <Icon name={m.icon} className="w-10 h-10 md:w-12 md:h-12" stroke={2.2} />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[var(--success)] text-white flex items-center justify-center border-2 border-white">
+                      <Icon name="check" className="w-4 h-4" stroke={3} />
+                    </div>
+                  </div>
+                  <div className="mt-3 font-display font-bold text-sm md:text-base">{m.title}</div>
+                  <div className="text-[11px] tracking-widest font-semibold" style={{ color: m.colors[0] }}>{m.tag}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="card p-6 md:p-8 mb-6 relative overflow-hidden">
+        <div className="orb absolute -bottom-16 -left-10 w-64 h-64" style={{ background: "#d7e4ff", opacity: 0.65 }} />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-4">
+            <Icon name="sparkles" className="w-5 h-5 text-[var(--primary)]" />
+            <div className="font-display font-bold text-lg">Your Signature</div>
+          </div>
+          <p className="text-lg leading-relaxed">{POS_SUMMARY[result.strongest]}</p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 mb-8 stagger">
+        {POSITIVE_BULLETS.map((p, i) => (
+          <div key={i} className="card p-5">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3" style={{ background: ["linear-gradient(135deg,#10b981,#06b6d4)","linear-gradient(135deg,#6366f1,#3b82f6)","linear-gradient(135deg,#a855f7,#ec4899)"][i] }}>
+              <Icon name={["bolt","shield","heart"][i]} className="w-5 h-5" />
+            </div>
+            <div className="text-sm leading-relaxed">{p}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="text-center">
+        <p className="text-[var(--ink-soft)] mb-5">Thanks for playing. Your responses have been shared with your evaluator.</p>
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <button onClick={onRestart} className="btn-ghost px-6 py-3 font-display text-sm flex items-center gap-2">
+            <Icon name="restart" className="w-4 h-4" /> Play Again
+          </button>
+          <button onClick={onPortal} className="btn-primary px-6 py-3 font-display text-sm flex items-center gap-2">
+            <Icon name="briefcase" className="w-4 h-4" /> Evaluator View <Icon name="arrow-right" className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========== MANAGER DASHBOARD (professional Inter) =========== */
+function DimBar({ label, value, delay = 0 }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), delay); return () => clearTimeout(t); }, [delay]);
+  const v = useCountUp(value, 1200, ready);
+  const pct = Math.max(0, Math.min(100, (v / 4) * 100));
+  const color = value >= 3 ? "#10b981" : value >= 2 ? "#f59e0b" : "#ef4444";
+  return (
+    <div>
+      <div className="flex justify-between items-end mb-2">
+        <span className="text-sm font-semibold">{label}</span>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-lg font-extrabold tabular" style={{ color }}>{v.toFixed(2)}</span>
+          <span className="text-xs text-[var(--ink-mute)] tabular">/ 4.00</span>
+        </div>
+      </div>
+      <div className="h-2.5 rounded-full overflow-hidden bg-[var(--line-2)]">
+        <div className="h-full rounded-full relative" style={{ width: pct + "%", background: `linear-gradient(90deg, ${color}cc, ${color})`, transition: "width 1.2s cubic-bezier(.2,.8,.2,1)", boxShadow: `0 0 10px ${color}66` }}>
+          <div className="absolute inset-0 progress-shimmer opacity-50" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ManagerListView({ candidates, onOpen, onBack }) {
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState("date");
+  const list = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let rows = candidates.filter(c => !q || c.name.toLowerCase().includes(q) || c.status.toLowerCase().includes(q));
+    rows.sort((a,b) => sortBy === "score" ? b.score - a.score : sortBy === "name" ? a.name.localeCompare(b.name) : b.date.localeCompare(a.date));
+    return rows;
+  }, [candidates, query, sortBy]);
+  const avgScore = candidates.length ? (candidates.reduce((s,c)=>s+c.score,0)/candidates.length) : 0;
+  const l4 = candidates.filter(c => c.level === 4).length;
+  const flagged = candidates.filter(c => c.meta.consistencyFlag).length;
+
+  return (
+    <div className="scene-enter max-w-7xl mx-auto px-4 md:px-8 py-8">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <div className="chip mb-2" style={{ background: "rgba(99,102,241,0.08)", color: "#3730a3", borderColor: "rgba(99,102,241,0.25)" }}>
+            <Icon name="briefcase" className="w-3.5 h-3.5" /> EVALUATOR DASHBOARD
+          </div>
+          <h1 className="font-display text-3xl md:text-4xl font-extrabold">Candidate Reports</h1>
+        </div>
+        <button onClick={onBack} className="btn-ghost px-4 py-2 text-sm flex items-center gap-2">
+          <Icon name="user" className="w-4 h-4" /> Back to Candidate
+        </button>
+      </div>
+
+      <div className="grid md:grid-cols-4 gap-4 mb-6 stagger">
+        {[{icon:"user",label:"Total Candidates",value:candidates.length,color:"#6366f1"},
+          {icon:"trophy",label:"Avg Score",value:avgScore.toFixed(2),color:"#10b981"},
+          {icon:"star",label:"Level 4 Count",value:l4,color:"#f59e0b"},
+          {icon:"alert",label:"Flagged",value:flagged,color:"#ef4444"}].map(k => (
+          <div key={k.label} className="card p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: k.color }}><Icon name={k.icon} className="w-5 h-5" /></div>
+            <div>
+              <div className="text-xs text-[var(--ink-soft)] font-medium">{k.label}</div>
+              <div className="text-2xl font-extrabold tabular">{k.value}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card p-3 flex items-center gap-2 flex-wrap mb-4">
+        <div className="flex items-center gap-2 flex-1 min-w-[220px] px-3 py-2 rounded-lg bg-[#fafbff] border border-[var(--line)]">
+          <Icon name="target" className="w-4 h-4 text-[var(--ink-mute)]" />
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search candidate or status" className="flex-1 bg-transparent outline-none text-sm" />
+        </div>
+        <div className="flex items-center gap-1 bg-[#fafbff] border border-[var(--line)] rounded-lg p-1">
+          {["date","score","name"].map(k => (
+            <button key={k} onClick={() => setSortBy(k)} className={"px-3 py-1.5 rounded-md text-xs font-semibold capitalize transition " + (sortBy === k ? "bg-white text-[var(--primary)] shadow-sm" : "text-[var(--ink-soft)]")}>{k}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="hidden md:grid grid-cols-[1.5fr_1fr_0.8fr_1fr_1fr_auto] gap-4 px-5 py-3 text-[11px] font-bold tracking-widest text-[var(--ink-soft)] uppercase border-b border-[var(--line)] bg-[#fafbff]">
+          <div>Name</div><div>Date</div><div>Score</div><div>Level</div><div>Status</div><div />
+        </div>
+        <div>
+          {list.map((c, i) => {
+            const m = FINAL_LEVEL_META[c.level];
+            return (
+              <button key={c.id} onClick={() => onOpen(c)} className={"row-hover w-full text-left px-5 py-4 grid grid-cols-1 md:grid-cols-[1.5fr_1fr_0.8fr_1fr_1fr_auto] gap-3 md:gap-4 items-center " + (i < list.length - 1 ? "border-b border-[var(--line-2)]" : "")}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0" style={{ background: `hsl(${(i * 67) % 360}, 55%, 55%)` }}>
+                    {c.name.split(" ").map(s => s[0]).slice(0,2).join("")}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-semibold truncate flex items-center gap-2">{c.name}{c.meta.consistencyFlag && <Icon name="alert" className="w-3.5 h-3.5 text-[var(--lvl2-a)]" />}</div>
+                    <div className="text-xs text-[var(--ink-mute)] md:hidden">{c.date} · L{c.level} · {c.status}</div>
+                  </div>
+                </div>
+                <div className="hidden md:block text-sm text-[var(--ink-soft)] tabular">{c.date}</div>
+                <div className="hidden md:block"><span className="text-lg font-extrabold tabular" style={{ color: m.accent }}>{c.score.toFixed(2)}</span></div>
+                <div className="hidden md:block"><span className="chip" style={{ background: m.accent + "15", color: m.accent, borderColor: m.accent + "44" }}>L{c.level} · {m.name}</span></div>
+                <div className="hidden md:block">
+                  <span className="chip" style={{
+                    background: c.status === "Shortlisted" ? "rgba(16,185,129,0.12)" : c.status === "Reviewed" ? "rgba(99,102,241,0.12)" : "rgba(148,163,184,0.15)",
+                    color:      c.status === "Shortlisted" ? "#065f46"               : c.status === "Reviewed" ? "#3730a3"                 : "#475569",
+                    borderColor:c.status === "Shortlisted" ? "rgba(16,185,129,0.3)"  : c.status === "Reviewed" ? "rgba(99,102,241,0.3)"    : "rgba(148,163,184,0.3)"
+                  }}>{c.status}</span>
+                </div>
+                <div className="hidden md:flex justify-end"><Icon name="arrow-right" className="w-4 h-4 text-[var(--ink-mute)]" /></div>
+              </button>
+            );
+          })}
+          {list.length === 0 && <div className="p-10 text-center text-[var(--ink-mute)] text-sm">No candidates match.</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ManagerReportView({ candidate, onBack }) {
+  const m = FINAL_LEVEL_META[candidate.level];
+  const [reveal, setReveal] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReveal(true), 200); return () => clearTimeout(t); }, []);
+  const score = useCountUp(candidate.score, 1400, reveal);
+  const entries = Object.entries(candidate.dims).filter(([,v]) => v > 0);
+  const strongest = entries.slice().sort((a,b) => b[1] - a[1])[0][0];
+  const weakest   = entries.slice().sort((a,b) => a[1] - b[1])[0][0];
+
+  return (
+    <div className="scene-enter max-w-6xl mx-auto px-4 md:px-8 py-8">
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <button onClick={onBack} className="btn-ghost px-4 py-2 text-sm flex items-center gap-2">
+          <Icon name="arrow-right" className="w-4 h-4 rotate-180" /> Back to List
+        </button>
+        <div className="chip" style={{ background: "rgba(99,102,241,0.08)", color: "#3730a3", borderColor: "rgba(99,102,241,0.25)" }}>
+          <Icon name="briefcase" className="w-3.5 h-3.5" /> INDIVIDUAL REPORT
+        </div>
+      </div>
+
+      <div className="card p-6 md:p-8 mb-5 relative overflow-hidden">
+        <div className="orb absolute -top-16 -left-10 w-72 h-72" style={{ background: m.accent + "30", opacity: 0.5 }} />
+        <div className="orb absolute -bottom-16 -right-12 w-72 h-72" style={{ background: "#d7e4ff", opacity: 0.7, animationDelay: "-9s" }} />
+        <div className="relative grid lg:grid-cols-3 gap-6 items-center">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl" style={{ background: "linear-gradient(135deg,#6366f1,#3b82f6)" }}>
+                {candidate.name.split(" ").map(s => s[0]).slice(0,2).join("")}
+              </div>
+              <div>
+                <div className="text-2xl md:text-3xl font-extrabold">{candidate.name}</div>
+                <div className="text-sm text-[var(--ink-soft)] mt-0.5 flex items-center gap-3">
+                  <span className="flex items-center gap-1"><Icon name="clock" className="w-3.5 h-3.5" /> {candidate.date}</span>
+                  <span>·</span>
+                  <span>Status: <span className="font-semibold">{candidate.status}</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-start lg:justify-end gap-5">
+            <div className="text-center">
+              <div className="text-[10px] tracking-widest text-[var(--ink-mute)] font-semibold">FINAL SCORE</div>
+              <div className="text-5xl font-black tabular" style={{ color: m.accent }}>{score.toFixed(2)}</div>
+              <div className="text-xs text-[var(--ink-mute)]">/ 4.00</div>
+            </div>
+            <div className="text-center">
+              <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl text-white" style={{ background: `linear-gradient(135deg, ${m.accent}, ${m.accent}cc)`, boxShadow: `0 18px 40px -10px ${m.accent}aa` }}>
+                <div className="text-2xl font-black">L{candidate.level}</div>
+              </div>
+              <div className="mt-2 font-extrabold text-sm" style={{ color: m.accent }}>{m.name}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {candidate.meta.consistencyFlag && (
+        <div className="card p-4 md:p-5 mb-5 flex items-start gap-3" style={{ borderColor: "rgba(245,158,11,0.4)", background: "linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)" }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: "linear-gradient(135deg,#f59e0b,#f97316)" }}>
+            <Icon name="alert" className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="font-extrabold text-[var(--lvl2-a)]">Consistency Gap Detected</div>
+            <div className="text-sm mt-1">Phase 02 ranking diverged from the behavior stated in Phase 01. Recommend structured interview follow-up to probe stated vs. revealed preference.</div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid lg:grid-cols-3 gap-5 mb-5">
+        <div className="lg:col-span-2 card p-5 md:p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <Icon name="target" className="w-5 h-5 text-[var(--primary)]" />
+            <div className="font-extrabold text-lg">Dimension Breakdown</div>
+            <span className="ml-auto text-xs text-[var(--ink-mute)] font-mono tracking-widest">WEIGHTED</span>
+          </div>
+          <div className="space-y-5">
+            <DimBar label="Ownership · Accountability (0.40)" value={candidate.dims.accountability}    delay={150} />
+            <DimBar label="Action Orientation (0.35)"         value={candidate.dims.actionOrientation} delay={300} />
+            <DimBar label="Perseverance (0.25)"               value={candidate.dims.perseverance}      delay={450} />
+          </div>
+        </div>
+
+        <div className="card p-5 md:p-6">
+          <div className="flex items-center gap-2 mb-5">
+            <Icon name="shield" className="w-5 h-5 text-[var(--lvl3-a)]" />
+            <div className="font-extrabold text-lg">Validation Signals</div>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between"><span className="text-sm text-[var(--ink-soft)]">Avg response time</span><span className="font-extrabold tabular">{(candidate.meta.avgResponseMs / 1000).toFixed(1)}s</span></div>
+            <div className="flex items-center justify-between"><span className="text-sm text-[var(--ink-soft)]">Fast responses (&lt;3s)</span><span className="font-extrabold tabular">{candidate.meta.fastCount}</span></div>
+            <div className="flex items-center justify-between"><span className="text-sm text-[var(--ink-soft)]">Consistency check</span>
+              <span className="chip" style={candidate.meta.consistencyFlag ? { background: "rgba(245,158,11,0.12)", color: "#92400e", borderColor: "rgba(245,158,11,0.3)" } : { background: "rgba(16,185,129,0.12)", color: "#065f46", borderColor: "rgba(16,185,129,0.3)" }}>{candidate.meta.consistencyFlag ? "Gap detected" : "Consistent"}</span>
+            </div>
+            <div className="flex items-center justify-between"><span className="text-sm text-[var(--ink-soft)]">Pattern</span>
+              <span className="chip" style={{ background: "rgba(99,102,241,0.08)", color: "#3730a3", borderColor: "rgba(99,102,241,0.25)" }}>{candidate.meta.avgResponseMs < 4500 ? "Snap decisions" : candidate.meta.avgResponseMs > 8000 ? "Deliberate" : "Balanced"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-5 mb-5">
+        <div className="card p-5 md:p-6 relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full" style={{ background: "#10b98122", filter: "blur(30px)" }} />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#10b981,#06b6d4)" }}><Icon name="bolt" className="w-5 h-5" /></div>
+              <div className="font-extrabold text-lg" style={{ color: "#10b981" }}>Strengths</div>
+            </div>
+            <div className="text-sm leading-relaxed">
+              <div className="font-semibold mb-1">{DIMENSION_LABEL[strongest]}</div>
+              {STRENGTH_NOTE[strongest]}
+            </div>
+          </div>
+        </div>
+        <div className="card p-5 md:p-6 relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full" style={{ background: "#f59e0b22", filter: "blur(30px)" }} />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg,#f59e0b,#f97316)" }}><Icon name="target" className="w-5 h-5" /></div>
+              <div className="font-extrabold text-lg" style={{ color: "#b45309" }}>Development Area</div>
+            </div>
+            <div className="text-sm leading-relaxed">
+              <div className="font-semibold mb-1">{DIMENSION_LABEL[weakest]}</div>
+              {DEV_TIP[weakest]}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card p-5 md:p-6 mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon name="sparkles" className="w-5 h-5 text-[var(--lvl3-a)]" />
+          <div className="font-extrabold text-lg">Behavioral Summary</div>
+        </div>
+        <p className="leading-relaxed">{LEVEL_SUMMARY[candidate.level]}</p>
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <button onClick={onBack} className="btn-ghost px-5 py-3 font-display text-sm flex items-center gap-2"><Icon name="arrow-right" className="w-4 h-4 rotate-180" /> Back to List</button>
+        <button onClick={() => window.print()} className="btn-primary px-5 py-3 font-display text-sm flex items-center gap-2"><Icon name="download" className="w-4 h-4" /> Export Report</button>
+      </div>
+    </div>
+  );
+}
+
+/* =========== ROOT =========== */
+function CatalystAdventure() {
+  const params = new URLSearchParams(window.location.search);
+  const initialRole = params.get("role") === "manager" ? "manager" : "candidate";
+
+  const [role, setRole] = useState(initialRole);
+  const [view, setView] = useState("intro");
+  const [managerView, setManagerView] = useState("list");
+  const [managerOpen, setManagerOpen] = useState(null);
+  const [candidateName, setCandidateName] = useState("");
+
+  const [l1Answers, setL1Answers] = useState([]);
+  const [l2Answers, setL2Answers] = useState([]);
+  const [l3Answers, setL3Answers] = useState([]);
+  const [l1Idx, setL1Idx] = useState(0);
+  const [l2Idx, setL2Idx] = useState(0);
+  const [l3Idx, setL3Idx] = useState(0);
+  const [l1Picked, setL1Picked] = useState(null);
+  const [l3Picked, setL3Picked] = useState(null);
+  const [l2Order, setL2Order] = useState(null);
+  const l2OrderRef = useRef(null);
+  useEffect(() => { l2OrderRef.current = l2Order; }, [l2Order]);
+  const [timeLeft, setTimeLeft] = useState(L1_TIMER);
+  const [logging, setLogging] = useState(false);
+  const loggingRef = useRef(false);
+  useEffect(() => { loggingRef.current = logging; }, [logging]);
+  const questionShownAt = useRef(0);
+  useEffect(() => { questionShownAt.current = Date.now(); }, [view, l1Idx, l2Idx, l3Idx]);
+  const [savedCandidates, setSavedCandidates] = useState(mockCandidates);
+
+  const [toast, setToast] = useState(null);
+  const toastId = useRef(0);
+  const showToast = (message, tone = "primary") => {
+    toastId.current += 1;
+    const id = toastId.current;
+    setToast({ id, message, tone });
+    setTimeout(() => setToast(t => (t && t.id === id ? null : t)), 2100);
+  };
+
+  const completedLevels = useMemo(() => {
+    const d = [];
+    if (l1Answers.length === L1.length) d.push(1);
+    if (l2Answers.length === L2.length) d.push(2);
+    if (l3Answers.length === L3.length) d.push(3);
+    return d;
+  }, [l1Answers, l2Answers, l3Answers]);
+  const currentLevelOnMap = completedLevels.length === 0 ? 1 : completedLevels.length === 1 ? 2 : completedLevels.length === 2 ? 3 : null;
+  const totalQ = L1.length + L2.length + L3.length;
+  const answered = l1Answers.length + l2Answers.length + l3Answers.length;
+  const progressPct = (answered / totalQ) * 100;
+
+  /* LEVEL 1 */
+  const submitL1 = useCallback((option, auto = false) => {
+    if (loggingRef.current) return;
+    const s = L1[l1Idx];
+    const dt = Date.now() - questionShownAt.current;
+    setL1Picked(option);
+    setL1Answers(prev => [...prev, { id: s.id, dimension: s.dimension, level: option.level, auto, responseMs: dt }]);
+    setLogging(true);
+    showToast(auto ? "Time up — choice auto-logged" : "Move logged", auto ? "warn" : "success");
+    setTimeout(() => {
+      setLogging(false); setL1Picked(null);
+      if (l1Idx + 1 < L1.length) setL1Idx(l1Idx + 1);
+      else setView("level1-complete");
+    }, LOG_MS);
+  }, [l1Idx]);
+
+  useEffect(() => {
+    if (view !== "level1" || logging) return;
+    const start = Date.now(), duration = L1_TIMER * 1000;
+    setTimeLeft(L1_TIMER);
+    let cancelled = false, fired = false;
+    const tick = () => {
+      if (cancelled) return;
+      const rem = Math.max(0, (duration - (Date.now() - start)) / 1000);
+      setTimeLeft(rem);
+      if (rem <= 0 && !fired) { fired = true; const s = L1[l1Idx]; submitL1([...s.options].sort((a,b)=>a.level-b.level)[0], true); }
+      else if (rem > 0) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    return () => { cancelled = true; };
+  }, [view, l1Idx, logging, submitL1]);
+
+  /* LEVEL 2 */
+  const submitL2 = useCallback((order, auto = false) => {
+    if (loggingRef.current) return;
+    const s = L2[l2Idx];
+    const ordered = order.map(i => s.options[i]);
+    const dt = Date.now() - questionShownAt.current;
+    setL2Answers(prev => [...prev, { id: s.id, dimension: s.dimension, rankings: ordered, auto, responseMs: dt }]);
+    setLogging(true);
+    showToast(auto ? "Time up — order locked" : "Priority locked in", auto ? "warn" : "purple");
+    setTimeout(() => {
+      setLogging(false); setL2Order(null);
+      if (l2Idx + 1 < L2.length) setL2Idx(l2Idx + 1);
+      else setView("level2-complete");
+    }, LOG_MS);
+  }, [l2Idx]);
+
+  useEffect(() => {
+    if (view !== "level2" || logging) return;
+    const start = Date.now(), duration = L2_TIMER * 1000;
+    setTimeLeft(L2_TIMER);
+    let cancelled = false, fired = false;
+    const tick = () => {
+      if (cancelled) return;
+      const rem = Math.max(0, (duration - (Date.now() - start)) / 1000);
+      setTimeLeft(rem);
+      if (rem <= 0 && !fired) {
+        fired = true;
+        const s = L2[l2Idx];
+        const current = l2OrderRef.current || [];
+        const leftover = s.options.map((_, i) => i).filter(i => !current.includes(i));
+        submitL2([...current, ...leftover], true);
+      } else if (rem > 0) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    return () => { cancelled = true; };
+  }, [view, l2Idx, logging, submitL2]);
+
+  /* LEVEL 3 */
+  const submitL3 = useCallback((option) => {
+    if (loggingRef.current) return;
+    const q = L3[l3Idx];
+    const dt = Date.now() - questionShownAt.current;
+    setL3Picked(option);
+    setL3Answers(prev => [...prev, { id: q.id, dimension: q.dimension, level: option.level, responseMs: dt }]);
+    setLogging(true);
+    showToast("Reflection saved", "purple");
+    setTimeout(() => {
+      setLogging(false); setL3Picked(null);
+      if (l3Idx + 1 < L3.length) setL3Idx(l3Idx + 1);
+      else setView("level3-complete");
+    }, LOG_MS);
+  }, [l3Idx]);
+
+  const result = useMemo(() => {
+    if (!(l1Answers.length === L1.length && l2Answers.length === L2.length && l3Answers.length === L3.length)) return null;
+    return computeResults(l1Answers, l2Answers, l3Answers);
+  }, [l1Answers, l2Answers, l3Answers]);
+
+  useEffect(() => {
+    if (!result || !candidateName) return;
+    const id = "self-" + candidateName.toLowerCase().replace(/\s+/g,"-");
+    setSavedCandidates(prev => {
+      if (prev.some(c => c.id === id)) return prev;
+      const today = new Date().toISOString().slice(0, 10);
+      return [{ id, name: candidateName, date: today, score: result.finalScore, level: result.level, status: "Pending",
+                dims: result.dimScores, meta: { ...result.meta, consistencyFlag: result.consistencyFlag }, answers: null }, ...prev];
+    });
+  }, [result, candidateName]);
+
+  const restart = () => {
+    setL1Answers([]); setL2Answers([]); setL3Answers([]);
+    setL1Idx(0); setL2Idx(0); setL3Idx(0);
+    setL2Order(null); setL1Picked(null); setL3Picked(null);
+    setCandidateName(""); setView("intro"); setRole("candidate");
+  };
+  const toggleRole = () => { if (role === "candidate") { setRole("manager"); setManagerView("list"); } else { setRole("candidate"); } };
+  const onHome = () => { if (role === "manager") { setManagerView("list"); setManagerOpen(null); } };
+
+  let body = null;
+  if (role === "manager") {
+    const inner = managerView === "list"
+      ? <ManagerListView candidates={savedCandidates} onOpen={(c) => { setManagerOpen(c); setManagerView("report"); }} onBack={() => setRole("candidate")} />
+      : <ManagerReportView candidate={managerOpen} onBack={() => { setManagerView("list"); setManagerOpen(null); }} />;
+    body = <div className="manager-scope">{inner}</div>;
+  } else {
+    switch (view) {
+      case "intro":            body = <Intro onStart={(n) => { setCandidateName(n); setView("journey"); }} />; break;
+      case "journey":          body = <JourneyMap currentLevel={currentLevelOnMap} completed={completedLevels} candidateName={candidateName}
+                                                   onEnter={(n) => { if (n === "reveal") { setView("candidate-results"); return; } setView(`level${n}-intro`); }} />; break;
+      case "level1-intro":     body = <LevelIntro levelNum={1} onBegin={() => setView("level1")} />; break;
+      case "level1":           body = <Level1Screen idx={l1Idx} total={L1.length} scenario={L1[l1Idx]} timeLeft={timeLeft} onSelect={submitL1} logging={logging} lastPicked={l1Picked} progressPct={((l1Idx + (l1Picked ? 1 : 0)) / L1.length) * 100} />; break;
+      case "level1-complete":  body = <LevelCompleteView levelNum={1} candidateName={candidateName} onContinue={() => setView("journey")} />; break;
+      case "level2-intro":     body = <LevelIntro levelNum={2} onBegin={() => setView("level2")} />; break;
+      case "level2":           body = <Level2Screen idx={l2Idx} total={L2.length} scenario={L2[l2Idx]} timeLeft={timeLeft} onSubmit={(o)=>submitL2(o,false)} onOrderChange={(o)=>setL2Order(o)} logging={logging} progressPct={((l2Idx) / L2.length) * 100} />; break;
+      case "level2-complete":  body = <LevelCompleteView levelNum={2} candidateName={candidateName} onContinue={() => setView("journey")} />; break;
+      case "level3-intro":     body = <LevelIntro levelNum={3} onBegin={() => setView("level3")} />; break;
+      case "level3":           body = <Level3Screen idx={l3Idx} total={L3.length} question={L3[l3Idx]} onSelect={submitL3} logging={logging} lastPicked={l3Picked} progressPct={((l3Idx + (l3Picked ? 1 : 0)) / L3.length) * 100} />; break;
+      case "level3-complete":  body = <LevelCompleteView levelNum={3} candidateName={candidateName} onContinue={() => setView("journey")} />; break;
+      case "candidate-results":body = result ? <CandidateFinalView name={candidateName} result={result} onRestart={restart} onPortal={() => { setRole("manager"); setManagerView("list"); }} /> : null; break;
+    }
+  }
+
+  return (
+    <div className="relative min-h-screen">
+      <AmbientOrbs />
+      <div className="relative z-10">
+        <AppHeader role={role} onToggleRole={toggleRole} onHome={onHome}
+                   progressPct={role === "candidate" && view !== "intro" ? progressPct : null}
+                   candidateName={role === "candidate" && view !== "intro" ? candidateName : null} />
+        {body}
+        <div className="max-w-6xl mx-auto px-4 md:px-8 mt-12 pt-6 text-xs text-[var(--ink-mute)] flex justify-between items-center flex-wrap gap-3">
+          <span className="font-mono">catalyst-quest · adventure · v0.6</span>
+          <span className="flex items-center gap-2">
+            <a href="index.html" className="underline hover:text-[var(--primary)]">← Switch theme</a>
+            <span>·</span>
+            <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse inline-block" /> demo only</span>
+          </span>
+        </div>
+      </div>
+      {toast && <Toast key={toast.id} message={toast.message} tone={toast.tone} />}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<CatalystAdventure />);
+</script>
+</body>
+</html>

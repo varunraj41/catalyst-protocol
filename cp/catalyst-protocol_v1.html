@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Catalyst Protocol // Band 1 Behavioral Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --neon-green: #00ff88;
+    --neon-cyan: #00e5ff;
+    --neon-amber: #ffb020;
+    --neon-red: #ff4d6d;
+    --bg: #0a0a0f;
+  }
+  html, body, #root { background: var(--bg); min-height: 100%; }
+  body {
+    margin: 0;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #e5e7eb;
+  }
+  .glow-green { text-shadow: 0 0 6px #00ff8888, 0 0 14px #00ff8855; }
+  .glow-cyan  { text-shadow: 0 0 6px #00e5ff99, 0 0 14px #00e5ff55; }
+  .glow-amber { text-shadow: 0 0 6px #ffb02099, 0 0 14px #ffb02055; }
+  .glow-red   { text-shadow: 0 0 6px #ff4d6d99, 0 0 14px #ff4d6d55; }
+  .shadow-glow-green { box-shadow: 0 0 0 1px #00ff8844, 0 0 24px -4px #00ff8866; }
+  .shadow-glow-cyan  { box-shadow: 0 0 0 1px #00e5ff44, 0 0 24px -4px #00e5ff66; }
+
+  .blink::after {
+    content: "▮";
+    margin-left: 2px;
+    color: #00ff88;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .fade-in { animation: fadein 0.35s ease both; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .scanlines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(0,255,136,0.035) 0px,
+      rgba(0,255,136,0.035) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+  }
+
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(0,229,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: -1px -1px;
+  }
+
+  .bar-fill {
+    background: linear-gradient(90deg, #00ff88 0%, #00e5ff 100%);
+    box-shadow: 0 0 10px #00ff8899;
+  }
+
+  button:focus-visible, input:focus-visible {
+    outline: 2px solid #00e5ff;
+    outline-offset: 2px;
+  }
+
+  .typewriter {
+    overflow: hidden;
+    white-space: pre-wrap;
+  }
+</style>
+</head>
+<body class="bg-gray-950">
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+/* ---------- DATA ---------- */
+
+const phase1Scenarios = [
+  {
+    id: "p1s1", dimension: "accountability",
+    bot: "ARIA: 🚨 Build alert — your latest commit may have broken smoke tests. QA wants to rollback immediately. What do you do?",
+    options: [
+      { text: "Tell QA to rollback. I'll review logs after the environment stabilizes.", level: 2 },
+      { text: "Hold the rollback. I'm checking my local env now — update in 5 mins.", level: 3 },
+      { text: "I'll reproduce it locally, push a hotfix, and run targeted tests before deciding on rollback.", level: 4 }
+    ]
+  },
+  {
+    id: "p1s2", dimension: "actionOrientation",
+    bot: "ARIA: API docs for your next ticket won't be ready for 4 hours. Team Lead says you can wait or start early.",
+    options: [
+      { text: "I'll wait — coding without docs wastes effort.", level: 1 },
+      { text: "I'll set up boilerplate and mock interfaces so I'm ready when docs land.", level: 3 },
+      { text: "I'll scaffold the module, identify critical unknowns, and draft clarification questions to speed things up.", level: 4 }
+    ]
+  },
+  {
+    id: "p1s3", dimension: "perseverance",
+    bot: "ARIA: You've been debugging a critical logic error for 3 hours. Sprint deadline in 2 hours.",
+    options: [
+      { text: "Escalate to senior dev immediately to avoid missing sprint.", level: 2 },
+      { text: "Take a 5-min break, then try a completely different debugging approach.", level: 3 },
+      { text: "Fix it, then add a Wiki note so the team avoids this specific error in future.", level: 4 }
+    ]
+  }
+];
+
+const phase2Scenarios = [
+  {
+    id: "p2s1", dimension: "accountability",
+    situation: "You spot a minor edge-case flaw in your code after it's already merged to Staging. Rank these actions 1st to 3rd:",
+    options: [
+      { text: "Wait for QA to flag it — if they miss it, it's probably not critical.", level: 1 },
+      { text: "Create a follow-up ticket and inform the lead; fix it next sub-sprint.", level: 2 },
+      { text: "Fix it now and push a patch immediately — keep Staging pristine.", level: 4 }
+    ]
+  },
+  {
+    id: "p2s2", dimension: "actionOrientation",
+    situation: "Critical feature needed urgently. Rank your approach 1st to 3rd:",
+    options: [
+      { text: "Defer until quality can be guaranteed, even if deadline slips.", level: 2 },
+      { text: "Ship a minimal viable version with known risks; plan a follow-up patch.", level: 3 },
+      { text: "Pause non-critical work, reallocate focus, and deliver with full tests.", level: 4 }
+    ]
+  }
+];
+
+const phase3Questions = [
+  {
+    id: "p3q1", dimension: "accountability",
+    question: "Why would you fix a self-discovered bug immediately rather than waiting for QA?",
+    options: [
+      { text: "I own the outcome. An open bug in Staging is my responsibility.", level: 4 },
+      { text: "Team process requires it — open bugs on Staging get flagged.", level: 2 }
+    ]
+  },
+  {
+    id: "p3q2", dimension: "actionOrientation",
+    question: "Why do you start boilerplate work while waiting for missing docs?",
+    options: [
+      { text: "I don't want to waste sprint time — I'll adjust details when specs arrive.", level: 3 },
+      { text: "I want the lead to see I'm proactive and not blocked.", level: 2 }
+    ]
+  },
+  {
+    id: "p3q3", dimension: "perseverance",
+    question: "What drives you to stay with a bug past 2 hours instead of escalating?",
+    options: [
+      { text: "I feel personally responsible for the ticket — it's not done until it's done.", level: 4 },
+      { text: "I don't want to look like I give up easily in front of the team.", level: 2 }
+    ]
+  }
+];
+
+/* ---------- CONSTANTS ---------- */
+
+const PHASE1_TIMER = 12;
+const PHASE2_TIMER = 20;
+const TRANSITION_MS = 1500;
+const LOG_MS = 800;
+
+const DIMENSION_LABEL = {
+  accountability: "Ownership / Accountability",
+  actionOrientation: "Action Orientation",
+  perseverance: "Perseverance"
+};
+
+const PERSONA = {
+  1: { label: "The Passive",     tag: "L1" },
+  2: { label: "The Apprentice",  tag: "L2" },
+  3: { label: "The Finisher",    tag: "L3" },
+  4: { label: "The Accelerator", tag: "L4" }
+};
+
+const LEVEL_SUMMARY = {
+  1: [
+    "Hesitates under pressure; defers decisions and minimizes personal exposure to risk.",
+    "Requires foundational development on initiative, closure, and personal ownership of outcomes."
+  ],
+  2: [
+    "Emerging awareness of accountability; still leans on team structure to resolve ambiguity.",
+    "Developing but not yet consistently proactive — benefits from deliberate coaching on ownership."
+  ],
+  3: [
+    "Completes what they start; takes reasonable initiative and drives tickets to done.",
+    "Next growth edge: proactively anticipate blockers and convert idle time into momentum."
+  ],
+  4: [
+    "Drives outcomes end-to-end; removes ambiguity, owns edge cases, and accelerates the team.",
+    "Ready for stretch scope — mentorship responsibilities and cross-functional ownership fit well."
+  ]
+};
+
+const DEV_TIP = {
+  accountability: "Develop ownership: treat every self-discovered issue as yours to resolve before handoff. Close the loop with stakeholders proactively rather than waiting for QA to surface it.",
+  actionOrientation: "Develop bias-for-action: when blocked on inputs, scaffold what you can, isolate unknowns, and draft clarification questions. Never let sprint time go idle.",
+  perseverance: "Develop grit: before escalating a stuck bug, switch approach (binary-search, new hypothesis, fresh logs). Document recovered defects so the team compounds your persistence."
+};
+
+/* ---------- SCORING ---------- */
+
+function computeResults(p1, p2, p3) {
+  // Map phase2 to first-choice level per scenario
+  const p2Scored = p2.map(a => ({
+    id: a.id,
+    dimension: a.dimension,
+    level: a.rankings[0].level,
+    rankings: a.rankings
+  }));
+
+  const allAnswers = [...p1, ...p2Scored, ...p3];
+
+  const byDim = {};
+  for (const a of allAnswers) {
+    if (!byDim[a.dimension]) byDim[a.dimension] = [];
+    byDim[a.dimension].push(a.level);
+  }
+
+  const avg = arr => arr.reduce((s, n) => s + n, 0) / arr.length;
+
+  const dimScores = {
+    accountability: byDim.accountability ? avg(byDim.accountability) : 0,
+    actionOrientation: byDim.actionOrientation ? avg(byDim.actionOrientation) : 0,
+    perseverance: byDim.perseverance ? avg(byDim.perseverance) : 0
+  };
+
+  const finalScore =
+    dimScores.accountability * 0.40 +
+    dimScores.actionOrientation * 0.35 +
+    dimScores.perseverance * 0.25;
+
+  let level;
+  if (finalScore >= 3.25) level = 4;
+  else if (finalScore >= 2.50) level = 3;
+  else if (finalScore >= 1.75) level = 2;
+  else level = 1;
+
+  // Consistency flag:
+  // In any phase 2 rank-order, if a Level 4 option is placed LAST
+  // AND phase 1's answer for the SAME dimension was Level 3+, flag.
+  let consistencyFlag = false;
+  for (const p2a of p2) {
+    const last = p2a.rankings[p2a.rankings.length - 1];
+    if (last.level === 4) {
+      const p1Match = p1.find(x => x.dimension === p2a.dimension);
+      if (p1Match && p1Match.level >= 3) {
+        consistencyFlag = true;
+        break;
+      }
+    }
+  }
+
+  // Weakest dimension for dev tip
+  const weakest = Object.entries(dimScores)
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => a[1] - b[1])[0][0];
+
+  return { dimScores, finalScore, level, consistencyFlag, weakest };
+}
+
+/* ---------- SMALL PIECES ---------- */
+
+function SysLine({ children, tone = "green", blink = false }) {
+  const cls = tone === "cyan" ? "text-[var(--neon-cyan)] glow-cyan"
+           : tone === "amber" ? "text-[var(--neon-amber)] glow-amber"
+           : "text-[var(--neon-green)] glow-green";
+  return (
+    <div className={"text-xs md:text-sm " + cls + (blink ? " blink" : "")}>
+      <span className="opacity-80">&gt; </span>{children}
+    </div>
+  );
+}
+
+function TimerBar({ value, max, tone = "green" }) {
+  const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  const barColor =
+    pct < 25 ? "linear-gradient(90deg,#ff4d6d 0%,#ffb020 100%)" :
+    pct < 50 ? "linear-gradient(90deg,#ffb020 0%,#00ff88 100%)" :
+               "linear-gradient(90deg,#00ff88 0%,#00e5ff 100%)";
+  return (
+    <div className="w-full">
+      <div className="flex justify-between text-[10px] md:text-xs uppercase tracking-widest mb-1">
+        <span className="text-[var(--neon-cyan)]">// timer</span>
+        <span className="text-[var(--neon-green)]">{value.toFixed(1)}s</span>
+      </div>
+      <div className="h-2 w-full bg-gray-900 border border-gray-800 rounded-sm overflow-hidden">
+        <div
+          className="h-full transition-[width] duration-100 linear"
+          style={{ width: pct + "%", background: barColor, boxShadow: "0 0 10px #00ff8866" }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function BrandHeader({ phase, progress }) {
+  return (
+    <div className="flex items-center justify-between border-b border-gray-800 pb-3 mb-6">
+      <div className="flex items-center gap-3">
+        <div className="w-3 h-3 rounded-full bg-[var(--neon-green)] animate-pulse shadow-[0_0_10px_#00ff88]" />
+        <div className="text-sm md:text-base tracking-[0.25em] text-[var(--neon-cyan)] glow-cyan font-semibold">
+          CATALYST://PROTOCOL
+        </div>
+      </div>
+      <div className="text-xs md:text-sm tracking-widest text-gray-400">
+        <span className="text-[var(--neon-green)]">{phase}</span>
+        {progress && <span className="ml-2 text-gray-500">{progress}</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- VIEWS ---------- */
+
+function IntroView({ onStart }) {
+  const [name, setName] = useState("");
+  const canStart = name.trim().length >= 2;
+  return (
+    <div className="fade-in max-w-3xl mx-auto">
+      <BrandHeader phase="INIT // 0.0" />
+      <div className="mb-8">
+        <div className="text-[var(--neon-green)] text-xs tracking-[0.3em] mb-3">[ SYSTEM READY ]</div>
+        <h1 className="text-3xl md:text-5xl font-bold leading-tight tracking-tight text-[var(--neon-green)] glow-green">
+          THE CATALYST PROTOCOL
+        </h1>
+        <div className="mt-2 text-sm md:text-base text-[var(--neon-cyan)] glow-cyan tracking-wider">
+          // BAND 1 · SOFTWARE ENGINEER · BEHAVIORAL ASSESSMENT
+        </div>
+      </div>
+
+      <div className="border border-gray-800 bg-black/40 rounded-sm p-5 md:p-6 shadow-glow-green mb-6">
+        <SysLine>booting kernel...</SysLine>
+        <SysLine>loading competency_model.json ✓</SysLine>
+        <SysLine>dimensions := {`{ accountability, action_orientation, perseverance }`}</SysLine>
+        <SysLine tone="cyan">awaiting candidate identifier...</SysLine>
+        <div className="mt-5">
+          <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2">
+            &gt; candidate_name
+          </label>
+          <div className="flex items-center gap-3 border border-[var(--neon-green)] bg-black px-3 py-2 rounded-sm shadow-glow-green">
+            <span className="text-[var(--neon-green)]">$</span>
+            <input
+              autoFocus
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && canStart) onStart(name.trim()); }}
+              placeholder="enter callsign"
+              className="flex-1 bg-transparent outline-none text-[var(--neon-green)] placeholder-gray-600 tracking-wide"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-3 mb-8 text-xs md:text-sm">
+        <div className="border border-gray-800 p-3 rounded-sm">
+          <div className="text-[var(--neon-cyan)] tracking-widest">PHASE_01</div>
+          <div className="text-gray-300 mt-1">SJT Bot Chat</div>
+          <div className="text-gray-500 text-[11px] mt-1">3 scenarios · 12s each</div>
+        </div>
+        <div className="border border-gray-800 p-3 rounded-sm">
+          <div className="text-[var(--neon-cyan)] tracking-widest">PHASE_02</div>
+          <div className="text-gray-300 mt-1">Rank-Order</div>
+          <div className="text-gray-500 text-[11px] mt-1">2 scenarios · 20s each</div>
+        </div>
+        <div className="border border-gray-800 p-3 rounded-sm">
+          <div className="text-[var(--neon-cyan)] tracking-widest">PHASE_03</div>
+          <div className="text-gray-300 mt-1">Attribution</div>
+          <div className="text-gray-500 text-[11px] mt-1">3 forced choices</div>
+        </div>
+      </div>
+
+      <button
+        disabled={!canStart}
+        onClick={() => onStart(name.trim())}
+        className={
+          "w-full md:w-auto px-8 py-3 font-bold tracking-[0.25em] text-sm rounded-sm transition " +
+          (canStart
+            ? "bg-[var(--neon-green)] text-black shadow-glow-green hover:brightness-110"
+            : "bg-gray-800 text-gray-500 cursor-not-allowed")
+        }
+      >
+        &gt; INITIALIZE_PROTOCOL
+      </button>
+    </div>
+  );
+}
+
+function LoadingView({ label }) {
+  const [pct, setPct] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    let raf;
+    const tick = () => {
+      const p = Math.min(100, ((Date.now() - start) / TRANSITION_MS) * 100);
+      setPct(p);
+      if (p < 100) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <div className="fade-in max-w-2xl mx-auto flex flex-col items-center justify-center py-24">
+      <div className="text-xs text-[var(--neon-cyan)] tracking-[0.35em] mb-3">// transmitting</div>
+      <div className="text-xl md:text-2xl text-[var(--neon-green)] glow-green tracking-widest blink">
+        SYSTEM LOADING {label}
+      </div>
+      <div className="w-full mt-8 h-2 bg-gray-900 border border-gray-800 rounded-sm overflow-hidden">
+        <div className="bar-fill h-full transition-[width] duration-75" style={{ width: pct + "%" }} />
+      </div>
+      <div className="mt-3 text-[10px] tracking-widest text-gray-500">INTEGRITY CHECK {pct.toFixed(0)}%</div>
+    </div>
+  );
+}
+
+function Phase1View({ index, total, scenario, timeLeft, onSelect, logging, lastPicked }) {
+  return (
+    <div className="fade-in max-w-3xl mx-auto">
+      <BrandHeader phase="PHASE_01 // SJT_BOT" progress={`scenario ${index + 1} / ${total}`} />
+      <TimerBar value={timeLeft} max={PHASE1_TIMER} />
+
+      <div className="mt-6 border border-gray-800 rounded-sm bg-black/60 p-5 md:p-6">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 shrink-0 rounded-sm border border-[var(--neon-cyan)] flex items-center justify-center text-[var(--neon-cyan)] glow-cyan text-xs font-bold">
+            A.R
+          </div>
+          <div className="flex-1">
+            <div className="text-[11px] tracking-widest text-[var(--neon-cyan)]">ARIA // assistant_bot</div>
+            <div className="mt-2 text-sm md:text-base leading-relaxed text-gray-100">
+              {scenario.bot}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3">
+        {scenario.options.map((opt, i) => {
+          const isPicked = lastPicked && lastPicked.text === opt.text;
+          return (
+            <button
+              key={i}
+              disabled={logging}
+              onClick={() => onSelect(opt)}
+              className={
+                "text-left group border rounded-sm p-4 transition " +
+                (isPicked
+                  ? "border-[var(--neon-green)] bg-[#001a10] shadow-glow-green"
+                  : "border-gray-800 bg-black/40 hover:border-[var(--neon-green)] hover:bg-[#001a10]/60")
+              }
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-[var(--neon-cyan)] glow-cyan text-xs mt-0.5 tracking-widest">
+                  [{String.fromCharCode(65 + i)}]
+                </span>
+                <span className="text-gray-100 text-sm md:text-[15px] leading-relaxed group-hover:text-[var(--neon-green)]">
+                  {opt.text}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 min-h-[20px]">
+        {logging && (
+          <div className="space-y-1 fade-in">
+            <SysLine>logging response...</SysLine>
+            <SysLine tone="cyan">response.signature := captured ✓</SysLine>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Phase2View({ index, total, scenario, timeLeft, rankings, onClick, onSubmit, logging }) {
+  const rankOf = (i) => {
+    const pos = rankings.indexOf(i);
+    return pos === -1 ? null : pos + 1;
+  };
+  const rankLabel = (n) => n === 1 ? "1st" : n === 2 ? "2nd" : "3rd";
+  const ready = rankings.length === scenario.options.length;
+
+  return (
+    <div className="fade-in max-w-3xl mx-auto">
+      <BrandHeader phase="PHASE_02 // RANK_ORDER" progress={`scenario ${index + 1} / ${total}`} />
+      <TimerBar value={timeLeft} max={PHASE2_TIMER} />
+
+      <div className="mt-6 border border-gray-800 rounded-sm bg-black/60 p-5">
+        <div className="text-[11px] tracking-widest text-[var(--neon-cyan)] mb-2">// situation</div>
+        <div className="text-sm md:text-base text-gray-100 leading-relaxed">{scenario.situation}</div>
+        <div className="mt-3 text-[11px] tracking-widest text-gray-500">
+          CLICK OPTIONS IN PRIORITY ORDER · click again to unrank
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3">
+        {scenario.options.map((opt, i) => {
+          const r = rankOf(i);
+          const ranked = r !== null;
+          return (
+            <button
+              key={i}
+              disabled={logging}
+              onClick={() => onClick(i)}
+              className={
+                "text-left border rounded-sm p-4 transition flex items-start gap-4 " +
+                (ranked
+                  ? "border-[var(--neon-green)] bg-[#001a10] shadow-glow-green"
+                  : "border-gray-800 bg-black/40 hover:border-[var(--neon-cyan)]")
+              }
+            >
+              <div
+                className={
+                  "w-12 h-12 shrink-0 flex items-center justify-center rounded-sm border text-sm font-bold tracking-widest " +
+                  (ranked
+                    ? "border-[var(--neon-green)] text-[var(--neon-green)] glow-green"
+                    : "border-gray-700 text-gray-600")
+                }
+              >
+                {ranked ? rankLabel(r) : "—"}
+              </div>
+              <div className="text-gray-100 text-sm md:text-[15px] leading-relaxed">
+                {opt.text}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 flex items-center justify-between">
+        <div className="text-[11px] text-gray-500 tracking-widest">
+          RANKED {rankings.length}/{scenario.options.length}
+        </div>
+        <button
+          disabled={!ready || logging}
+          onClick={onSubmit}
+          className={
+            "px-5 py-2 font-bold text-sm tracking-[0.2em] rounded-sm transition " +
+            (ready && !logging
+              ? "bg-[var(--neon-green)] text-black shadow-glow-green hover:brightness-110"
+              : "bg-gray-800 text-gray-500 cursor-not-allowed")
+          }
+        >
+          &gt; SUBMIT_RANKINGS
+        </button>
+      </div>
+
+      <div className="mt-5 min-h-[20px]">
+        {logging && (
+          <div className="space-y-1 fade-in">
+            <SysLine>logging response...</SysLine>
+            <SysLine tone="cyan">rank_vector := stored ✓</SysLine>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Phase3View({ index, total, question, onSelect, logging, lastPicked }) {
+  return (
+    <div className="fade-in max-w-3xl mx-auto">
+      <BrandHeader phase="PHASE_03 // ATTRIBUTION" progress={`question ${index + 1} / ${total}`} />
+
+      <div className="border border-gray-800 rounded-sm bg-black/60 p-5 md:p-6">
+        <div className="text-[11px] tracking-widest text-[var(--neon-cyan)] mb-2">// why.probe</div>
+        <div className="text-lg md:text-xl text-gray-100 leading-relaxed">{question.question}</div>
+      </div>
+
+      <div className="mt-5 grid md:grid-cols-2 gap-3">
+        {question.options.map((opt, i) => {
+          const isPicked = lastPicked && lastPicked.text === opt.text;
+          return (
+            <button
+              key={i}
+              disabled={logging}
+              onClick={() => onSelect(opt)}
+              className={
+                "text-left border rounded-sm p-5 transition h-full " +
+                (isPicked
+                  ? "border-[var(--neon-green)] bg-[#001a10] shadow-glow-green"
+                  : "border-gray-800 bg-black/40 hover:border-[var(--neon-green)] hover:bg-[#001a10]/60")
+              }
+            >
+              <div className="text-[var(--neon-cyan)] glow-cyan text-xs tracking-widest mb-2">
+                [CHOICE_{i + 1}]
+              </div>
+              <div className="text-gray-100 text-sm md:text-[15px] leading-relaxed">
+                {opt.text}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 min-h-[20px]">
+        {logging && (
+          <div className="space-y-1 fade-in">
+            <SysLine>logging response...</SysLine>
+            <SysLine tone="cyan">motive.signal := parsed ✓</SysLine>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ScoreBar({ label, value }) {
+  const pct = Math.max(0, Math.min(100, (value / 4) * 100));
+  const color =
+    value >= 3 ? "#00ff88" :
+    value >= 2 ? "#ffb020" :
+                 "#ff4d6d";
+  const tone =
+    value >= 3 ? "text-[var(--neon-green)] glow-green" :
+    value >= 2 ? "text-[var(--neon-amber)] glow-amber" :
+                 "text-[var(--neon-red)] glow-red";
+  return (
+    <div>
+      <div className="flex justify-between items-end mb-1">
+        <span className="text-xs md:text-sm tracking-widest text-gray-300">{label}</span>
+        <span className={"text-sm font-bold " + tone}>{value.toFixed(2)} / 4.00</span>
+      </div>
+      <div className="h-3 bg-gray-900 border border-gray-800 rounded-sm overflow-hidden">
+        <div
+          className="h-full transition-[width] duration-700"
+          style={{
+            width: pct + "%",
+            background: color,
+            boxShadow: `0 0 10px ${color}99`
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ResultsView({ name, result, onRestart }) {
+  const persona = PERSONA[result.level];
+  const summary = LEVEL_SUMMARY[result.level];
+  const tip = DEV_TIP[result.weakest];
+
+  return (
+    <div className="fade-in max-w-4xl mx-auto">
+      <BrandHeader phase="RESULTS // REPORT" progress="render complete" />
+
+      <div className="space-y-2 mb-6">
+        <SysLine>compiling dimensional vector ✓</SysLine>
+        <SysLine>applying weight_matrix [0.40 · 0.35 · 0.25] ✓</SysLine>
+        <SysLine tone="cyan">dispatching report...</SysLine>
+      </div>
+
+      <div className="border border-[var(--neon-green)] bg-black/60 rounded-sm p-6 md:p-8 shadow-glow-green">
+        <div className="text-[11px] tracking-[0.3em] text-[var(--neon-cyan)] mb-2">
+          // CANDIDATE_PROFILE
+        </div>
+        <div className="text-2xl md:text-3xl font-bold tracking-wide text-gray-100">
+          {name}
+        </div>
+        <div className="mt-4 flex flex-wrap items-baseline gap-3">
+          <span className="text-[var(--neon-green)] glow-green text-5xl md:text-6xl font-extrabold tracking-tight">
+            {persona.label}
+          </span>
+          <span className="text-[var(--neon-cyan)] glow-cyan text-xl md:text-2xl font-bold tracking-widest">
+            // {persona.tag}
+          </span>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-4 max-w-md">
+          <div>
+            <div className="text-[11px] tracking-widest text-gray-500">FINAL_SCORE</div>
+            <div className="text-2xl md:text-3xl font-bold text-[var(--neon-green)] glow-green">
+              {result.finalScore.toFixed(2)}
+              <span className="text-sm text-gray-500 font-normal"> / 4.00</span>
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] tracking-widest text-gray-500">PROFICIENCY</div>
+            <div className="text-2xl md:text-3xl font-bold text-[var(--neon-cyan)] glow-cyan">
+              LEVEL {result.level}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {result.consistencyFlag && (
+        <div className="mt-5 border border-[var(--neon-amber)] bg-[#2a1a00]/60 rounded-sm px-5 py-3 flex items-start gap-3">
+          <span className="text-[var(--neon-amber)] glow-amber text-lg leading-none mt-0.5">⚠</span>
+          <div>
+            <div className="text-[var(--neon-amber)] glow-amber text-sm font-bold tracking-widest">
+              POSSIBLE CONSISTENCY GAP DETECTED
+            </div>
+            <div className="text-xs md:text-sm text-amber-100/80 mt-1">
+              Response signature in Phase 02 diverged from stated behavior in Phase 01. Recommend structured follow-up in interview to probe stated vs. revealed preference.
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-6 grid md:grid-cols-2 gap-5">
+        <div className="border border-gray-800 bg-black/40 rounded-sm p-5">
+          <div className="text-[11px] tracking-widest text-[var(--neon-cyan)] mb-4">// DIMENSION_VECTOR</div>
+          <div className="space-y-4">
+            <ScoreBar label={DIMENSION_LABEL.accountability} value={result.dimScores.accountability} />
+            <ScoreBar label={DIMENSION_LABEL.actionOrientation} value={result.dimScores.actionOrientation} />
+            <ScoreBar label={DIMENSION_LABEL.perseverance} value={result.dimScores.perseverance} />
+          </div>
+        </div>
+        <div className="border border-gray-800 bg-black/40 rounded-sm p-5 space-y-5">
+          <div>
+            <div className="text-[11px] tracking-widest text-[var(--neon-cyan)] mb-2">// BEHAVIORAL_SUMMARY</div>
+            <div className="text-sm text-gray-100 leading-relaxed">{summary[0]}</div>
+            <div className="text-sm text-gray-400 leading-relaxed mt-2">{summary[1]}</div>
+          </div>
+          <div className="border-t border-gray-800 pt-4">
+            <div className="text-[11px] tracking-widest text-[var(--neon-green)] mb-2">
+              // DEVELOPMENT_FOCUS · {DIMENSION_LABEL[result.weakest]}
+            </div>
+            <div className="text-sm text-gray-100 leading-relaxed">{tip}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 flex flex-wrap gap-3">
+        <button
+          onClick={onRestart}
+          className="px-5 py-2 font-bold text-sm tracking-[0.2em] rounded-sm bg-[var(--neon-green)] text-black shadow-glow-green hover:brightness-110"
+        >
+          &gt; RESTART_PROTOCOL
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="px-5 py-2 font-bold text-sm tracking-[0.2em] rounded-sm border border-[var(--neon-cyan)] text-[var(--neon-cyan)] hover:bg-[var(--neon-cyan)] hover:text-black transition"
+        >
+          &gt; EXPORT_REPORT
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- ROOT COMPONENT ---------- */
+
+function CatalystProtocol() {
+  const [view, setView] = useState("intro");
+  const [loadingLabel, setLoadingLabel] = useState(null);
+  const [candidateName, setCandidateName] = useState("");
+
+  const [phase1Answers, setPhase1Answers] = useState([]);
+  const [phase2Answers, setPhase2Answers] = useState([]);
+  const [phase3Answers, setPhase3Answers] = useState([]);
+
+  const [phase1Index, setPhase1Index] = useState(0);
+  const [phase2Index, setPhase2Index] = useState(0);
+  const [phase3Index, setPhase3Index] = useState(0);
+
+  const [phase1Picked, setPhase1Picked] = useState(null);
+  const [phase3Picked, setPhase3Picked] = useState(null);
+
+  const [rankings, setRankings] = useState([]);
+  const rankingsRef = useRef([]);
+  useEffect(() => { rankingsRef.current = rankings; }, [rankings]);
+
+  const [timeLeft, setTimeLeft] = useState(PHASE1_TIMER);
+  const [logging, setLogging] = useState(false);
+  const loggingRef = useRef(false);
+  useEffect(() => { loggingRef.current = logging; }, [logging]);
+
+  const transitionTo = useCallback((next, label) => {
+    setLoadingLabel(label);
+    setView("loading");
+    setTimeout(() => {
+      setLoadingLabel(null);
+      setView(next);
+    }, TRANSITION_MS);
+  }, []);
+
+  /* ---------- PHASE 1 LOGIC ---------- */
+
+  const submitPhase1 = useCallback((option, auto = false) => {
+    if (loggingRef.current) return;
+    const scenario = phase1Scenarios[phase1Index];
+    setPhase1Picked(option);
+    setPhase1Answers(prev => [...prev, {
+      id: scenario.id,
+      dimension: scenario.dimension,
+      level: option.level,
+      auto
+    }]);
+    setLogging(true);
+    setTimeout(() => {
+      setLogging(false);
+      setPhase1Picked(null);
+      if (phase1Index + 1 < phase1Scenarios.length) {
+        setPhase1Index(phase1Index + 1);
+      } else {
+        transitionTo("phase2", "NEXT MODULE · RANK_ORDER");
+      }
+    }, LOG_MS);
+  }, [phase1Index, transitionTo]);
+
+  useEffect(() => {
+    if (view !== "phase1" || logging) return;
+    const start = Date.now();
+    const duration = PHASE1_TIMER * 1000;
+    setTimeLeft(PHASE1_TIMER);
+    let cancelled = false;
+    let fired = false;
+    const tick = () => {
+      if (cancelled) return;
+      const remaining = Math.max(0, (duration - (Date.now() - start)) / 1000);
+      setTimeLeft(remaining);
+      if (remaining <= 0 && !fired) {
+        fired = true;
+        const scenario = phase1Scenarios[phase1Index];
+        const lowest = [...scenario.options].sort((a, b) => a.level - b.level)[0];
+        submitPhase1(lowest, true);
+      } else if (remaining > 0) {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+    return () => { cancelled = true; };
+  }, [view, phase1Index, logging, submitPhase1]);
+
+  /* ---------- PHASE 2 LOGIC ---------- */
+
+  const submitPhase2 = useCallback((orderIndices, auto = false) => {
+    if (loggingRef.current) return;
+    const scenario = phase2Scenarios[phase2Index];
+    const ordered = orderIndices.map(i => scenario.options[i]);
+    setPhase2Answers(prev => [...prev, {
+      id: scenario.id,
+      dimension: scenario.dimension,
+      rankings: ordered,
+      auto
+    }]);
+    setLogging(true);
+    setTimeout(() => {
+      setLogging(false);
+      setRankings([]);
+      if (phase2Index + 1 < phase2Scenarios.length) {
+        setPhase2Index(phase2Index + 1);
+      } else {
+        transitionTo("phase3", "NEXT MODULE · ATTRIBUTION");
+      }
+    }, LOG_MS);
+  }, [phase2Index, transitionTo]);
+
+  useEffect(() => {
+    if (view !== "phase2" || logging) return;
+    const start = Date.now();
+    const duration = PHASE2_TIMER * 1000;
+    setTimeLeft(PHASE2_TIMER);
+    let cancelled = false;
+    let fired = false;
+    const tick = () => {
+      if (cancelled) return;
+      const remaining = Math.max(0, (duration - (Date.now() - start)) / 1000);
+      setTimeLeft(remaining);
+      if (remaining <= 0 && !fired) {
+        fired = true;
+        const scenario = phase2Scenarios[phase2Index];
+        const current = [...rankingsRef.current];
+        for (let i = 0; i < scenario.options.length; i++) {
+          if (!current.includes(i)) current.push(i);
+        }
+        submitPhase2(current, true);
+      } else if (remaining > 0) {
+        requestAnimationFrame(tick);
+      }
+    };
+    requestAnimationFrame(tick);
+    return () => { cancelled = true; };
+  }, [view, phase2Index, logging, submitPhase2]);
+
+  const onPhase2Click = (idx) => {
+    if (logging) return;
+    setRankings(prev => {
+      if (prev.includes(idx)) return prev.filter(i => i !== idx);
+      if (prev.length >= phase2Scenarios[phase2Index].options.length) return prev;
+      return [...prev, idx];
+    });
+  };
+
+  /* ---------- PHASE 3 LOGIC ---------- */
+
+  const submitPhase3 = useCallback((option) => {
+    if (loggingRef.current) return;
+    const q = phase3Questions[phase3Index];
+    setPhase3Picked(option);
+    setPhase3Answers(prev => [...prev, {
+      id: q.id,
+      dimension: q.dimension,
+      level: option.level
+    }]);
+    setLogging(true);
+    setTimeout(() => {
+      setLogging(false);
+      setPhase3Picked(null);
+      if (phase3Index + 1 < phase3Questions.length) {
+        setPhase3Index(phase3Index + 1);
+      } else {
+        transitionTo("results", "COMPILING REPORT");
+      }
+    }, LOG_MS);
+  }, [phase3Index, transitionTo]);
+
+  /* ---------- RESULTS ---------- */
+
+  const result = useMemo(() => {
+    if (view !== "results") return null;
+    return computeResults(phase1Answers, phase2Answers, phase3Answers);
+  }, [view, phase1Answers, phase2Answers, phase3Answers]);
+
+  const restart = () => {
+    setPhase1Answers([]); setPhase2Answers([]); setPhase3Answers([]);
+    setPhase1Index(0);    setPhase2Index(0);    setPhase3Index(0);
+    setRankings([]);      setPhase1Picked(null); setPhase3Picked(null);
+    setCandidateName("");
+    setView("intro");
+  };
+
+  /* ---------- RENDER ---------- */
+
+  const body = (() => {
+    if (view === "intro") {
+      return <IntroView onStart={(n) => { setCandidateName(n); transitionTo("phase1", "MODULE · SJT_BOT"); }} />;
+    }
+    if (view === "loading") {
+      return <LoadingView label={loadingLabel || "NEXT MODULE..."} />;
+    }
+    if (view === "phase1") {
+      return (
+        <Phase1View
+          index={phase1Index}
+          total={phase1Scenarios.length}
+          scenario={phase1Scenarios[phase1Index]}
+          timeLeft={timeLeft}
+          onSelect={submitPhase1}
+          logging={logging}
+          lastPicked={phase1Picked}
+        />
+      );
+    }
+    if (view === "phase2") {
+      return (
+        <Phase2View
+          index={phase2Index}
+          total={phase2Scenarios.length}
+          scenario={phase2Scenarios[phase2Index]}
+          timeLeft={timeLeft}
+          rankings={rankings}
+          onClick={onPhase2Click}
+          onSubmit={() => submitPhase2(rankings, false)}
+          logging={logging}
+        />
+      );
+    }
+    if (view === "phase3") {
+      return (
+        <Phase3View
+          index={phase3Index}
+          total={phase3Questions.length}
+          question={phase3Questions[phase3Index]}
+          onSelect={submitPhase3}
+          logging={logging}
+          lastPicked={phase3Picked}
+        />
+      );
+    }
+    if (view === "results" && result) {
+      return <ResultsView name={candidateName} result={result} onRestart={restart} />;
+    }
+    return null;
+  })();
+
+  return (
+    <div className="relative min-h-screen grid-bg">
+      <div className="fixed inset-0 scanlines" />
+      <div className="relative px-4 md:px-8 py-8 md:py-12">
+        {body}
+        <div className="max-w-4xl mx-auto mt-12 pt-6 border-t border-gray-900 text-[10px] md:text-xs text-gray-600 tracking-widest flex justify-between">
+          <span>CATALYST_PROTOCOL · v0.1.0 · POC</span>
+          <span>© HYREO_LABS // BAND_01_BEHAVIORAL_ASSESSMENT</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<CatalystProtocol />);
+</script>
+</body>
+</html>

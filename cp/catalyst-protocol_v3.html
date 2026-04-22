@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Catalyst Protocol // Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg:        #04060e;
+    --bg-2:      #0a0f1e;
+    --elec:      #4d9fff;   /* electric blue  */
+    --purple:    #b388ff;   /* neon purple    */
+    --green:     #4ade80;   /* soft green     */
+    --cyan:      #22d3ee;
+    --warn:      #fbbf24;
+    --danger:    #f87171;
+    --ink:       #e6ebf5;
+    --ink-dim:   #8890a4;
+    --glass:     rgba(13, 20, 40, 0.55);
+    --glass-2:   rgba(10, 15, 28, 0.75);
+    --border:    rgba(255,255,255,0.08);
+    --border-2:  rgba(77,159,255,0.22);
+  }
+
+  * { box-sizing: border-box; }
+  html, body, #root { background: var(--bg); min-height: 100%; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .font-display { font-family: 'Orbitron', 'Space Grotesk', sans-serif; letter-spacing: 0.02em; }
+  .font-mono    { font-family: 'JetBrains Mono', monospace; }
+
+  /* Glow utilities */
+  .glow-elec   { text-shadow: 0 0 10px #4d9fffaa, 0 0 28px #4d9fff55; }
+  .glow-purple { text-shadow: 0 0 10px #b388ffaa, 0 0 28px #b388ff55; }
+  .glow-green  { text-shadow: 0 0 10px #4ade80aa, 0 0 28px #4ade8055; }
+  .glow-warn   { text-shadow: 0 0 10px #fbbf24aa, 0 0 28px #fbbf2455; }
+  .glow-danger { text-shadow: 0 0 10px #f87171aa, 0 0 28px #f8717155; }
+
+  /* Glassmorphism */
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+    border-radius: 6px;
+  }
+  .glass-strong {
+    background: var(--glass-2);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid var(--border-2);
+    border-radius: 6px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07);
+  }
+  .glass-hover:hover {
+    border-color: rgba(77,159,255,0.4);
+    box-shadow: 0 12px 48px rgba(77,159,255,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: linear-gradient(135deg, #4d9fff 0%, #b388ff 100%);
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    border: none;
+    border-radius: 4px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.12),
+      0 10px 36px -8px rgba(77,159,255,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: all 0.3s cubic-bezier(.2,.8,.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: shimmer 3.2s infinite;
+  }
+  @keyframes shimmer { 0% { transform: translateX(-100%);} 55%,100% { transform: translateX(120%);} }
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.015);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.2),
+      0 18px 54px -8px rgba(77,159,255,0.95),
+      inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .btn-primary:active { transform: translateY(0) scale(0.99); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-ghost {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    border-radius: 4px;
+    transition: all 0.25s;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+  }
+  .btn-ghost:hover {
+    border-color: var(--elec);
+    color: var(--elec);
+    background: rgba(77,159,255,0.06);
+  }
+
+  /* Option card */
+  .opt {
+    position: relative;
+    background: rgba(15, 22, 43, 0.55);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    transition: all 0.25s cubic-bezier(.2,.8,.2,1);
+    overflow: hidden;
+    text-align: left;
+    width: 100%;
+  }
+  .opt::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(77,159,255,0.08), rgba(179,136,255,0.08));
+    opacity: 0; transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .opt:hover:not(:disabled) {
+    transform: translateY(-3px);
+    border-color: rgba(77,159,255,0.45);
+    box-shadow: 0 12px 40px -10px rgba(77,159,255,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .opt:hover:not(:disabled)::before { opacity: 1; }
+  .opt.active {
+    border-color: var(--green);
+    background: rgba(74,222,128,0.07);
+    box-shadow: 0 0 0 1px var(--green), 0 0 48px -6px rgba(74,222,128,0.55);
+    animation: pulse-pick 0.8s ease-out;
+  }
+  @keyframes pulse-pick {
+    0% { box-shadow: 0 0 0 1px var(--green), 0 0 0 0 rgba(74,222,128,0.5); }
+    100% { box-shadow: 0 0 0 1px var(--green), 0 0 48px -6px rgba(74,222,128,0.55); }
+  }
+
+  /* Ranking card */
+  .rank-card {
+    position: relative;
+    background: rgba(15, 22, 43, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    transition: transform 0.25s cubic-bezier(.2,.8,.2,1), border-color 0.25s, box-shadow 0.25s, background 0.25s;
+    cursor: grab;
+  }
+  .rank-card:active { cursor: grabbing; }
+  .rank-card.dragging {
+    opacity: 0.55;
+    transform: scale(1.02);
+    border-color: var(--elec);
+    box-shadow: 0 20px 60px -10px rgba(77,159,255,0.6);
+  }
+  .rank-card.drop-target::before {
+    content: ""; position: absolute; left: -6px; right: -6px; top: -3px;
+    height: 2px; background: linear-gradient(90deg, transparent, var(--elec), transparent);
+    border-radius: 2px;
+    box-shadow: 0 0 12px var(--elec);
+    animation: flash 0.6s ease-in-out infinite alternate;
+  }
+  @keyframes flash { from { opacity: 0.5; } to { opacity: 1; } }
+  .rank-card.just-dropped { animation: bump 0.35s cubic-bezier(.2,1.6,.2,1); }
+  @keyframes bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.03); box-shadow: 0 0 0 1px var(--green), 0 0 30px -4px rgba(74,222,128,0.4); }
+    100% { transform: scale(1); }
+  }
+
+  /* Phase enter/exit */
+  .scene-enter { animation: sceneEnter 0.5s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes sceneEnter {
+    from { opacity: 0; transform: translateY(14px) scale(0.985); filter: blur(4px); }
+    to   { opacity: 1; transform: none; filter: none; }
+  }
+  .stagger > * { animation: sceneEnter 0.45s cubic-bezier(.2,.8,.2,1) both; }
+  .stagger > *:nth-child(1) { animation-delay: 0.04s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.12s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.20s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.28s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.36s; }
+
+  /* Text reveal */
+  .reveal {
+    display: inline-block;
+    background: linear-gradient(90deg, #ffffff 0%, #b388ff 50%, #4d9fff 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: reveal-bg 4s ease-in-out infinite;
+  }
+  @keyframes reveal-bg {
+    0%,100% { background-position: 0% 50%; }
+    50%     { background-position: 100% 50%; }
+  }
+
+  /* Cursor */
+  .cursor::after { content: "▮"; margin-left: 3px; color: var(--elec); animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Toast */
+  .toast {
+    position: fixed; right: 24px; bottom: 24px; z-index: 60;
+    animation: toast-in 0.35s cubic-bezier(.2,.8,.2,1) both, toast-out 0.35s ease-in 1.6s both;
+  }
+  @keyframes toast-in  { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: none; } }
+  @keyframes toast-out { to   { opacity: 0; transform: translateY(-6px); } }
+
+  /* Pulse ring */
+  .pulse-ring { position: relative; }
+  .pulse-ring::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    border: 2px solid currentColor; animation: pulsering 1.8s cubic-bezier(.2,.8,.2,1) infinite; opacity: 0;
+  }
+  @keyframes pulsering {
+    0%   { transform: scale(0.85); opacity: 0.7; }
+    100% { transform: scale(1.55); opacity: 0; }
+  }
+
+  /* Ambient orbs drift */
+  .orb {
+    position: absolute; border-radius: 9999px;
+    filter: blur(90px);
+    pointer-events: none;
+    animation: drift 22s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    0%   { transform: translate(0,0) scale(1); }
+    50%  { transform: translate(30px,-20px) scale(1.1); }
+    100% { transform: translate(-20px,20px) scale(0.95); }
+  }
+
+  /* Grid bg */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(77,159,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77,159,255,0.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+    background-position: -1px -1px;
+    animation: grid-drift 40s linear infinite;
+  }
+  @keyframes grid-drift { to { background-position: 56px 56px; } }
+
+  /* Scanline subtle */
+  .scanlines {
+    background-image: repeating-linear-gradient(to bottom,
+      rgba(255,255,255,0.015) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+  }
+
+  /* Countdown critical */
+  .critical-tint { animation: crit-flash 0.9s ease-in-out infinite; }
+  @keyframes crit-flash {
+    0%,100% { filter: drop-shadow(0 0 4px #f8717188); }
+    50%     { filter: drop-shadow(0 0 16px #f87171); }
+  }
+
+  /* Achievement badge */
+  .badge-halo {
+    position: relative;
+  }
+  .badge-halo::after {
+    content: ""; position: absolute; inset: -8px;
+    border-radius: inherit;
+    background: conic-gradient(from 0deg, var(--elec), var(--purple), var(--green), var(--elec));
+    filter: blur(14px); opacity: 0.55; z-index: -1;
+    animation: spin 6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Tabular */
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  ::selection { background: #4d9fff55; color: #fff; }
+  button { cursor: pointer; font-family: inherit; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--elec); outline-offset: 3px; }
+
+  /* Scroll overflow guards */
+  .no-scroll-bar::-webkit-scrollbar { display: none; }
+
+  /* Subtle floaters used by loading dots */
+  .loader-dots span {
+    display: inline-block; width: 6px; height: 6px; margin: 0 3px;
+    background: var(--elec); border-radius: 9999px;
+    animation: loader-dots 1.2s ease-in-out infinite;
+  }
+  .loader-dots span:nth-child(2) { animation-delay: 0.2s; background: var(--purple); }
+  .loader-dots span:nth-child(3) { animation-delay: 0.4s; background: var(--green); }
+  @keyframes loader-dots {
+    0%,100% { transform: translateY(0); opacity: 0.4; }
+    50%     { transform: translateY(-6px); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback, useLayoutEffect } = React;
+
+/* ======================================================================
+   DATA
+====================================================================== */
+
+const phase1Scenarios = [
+  {
+    id: "p1s1", dimension: "accountability",
+    bot: "🚨 Build alert — your latest commit may have broken smoke tests. QA wants to rollback immediately. What do you do?",
+    options: [
+      { text: "Tell QA to rollback. I'll review logs after the environment stabilizes.", level: 2 },
+      { text: "Hold the rollback. I'm checking my local env now — update in 5 mins.", level: 3 },
+      { text: "I'll reproduce it locally, push a hotfix, and run targeted tests before deciding on rollback.", level: 4 }
+    ]
+  },
+  {
+    id: "p1s2", dimension: "actionOrientation",
+    bot: "API docs for your next ticket won't be ready for 4 hours. Team Lead says you can wait or start early.",
+    options: [
+      { text: "I'll wait — coding without docs wastes effort.", level: 1 },
+      { text: "I'll set up boilerplate and mock interfaces so I'm ready when docs land.", level: 3 },
+      { text: "I'll scaffold the module, identify critical unknowns, and draft clarification questions to speed things up.", level: 4 }
+    ]
+  },
+  {
+    id: "p1s3", dimension: "perseverance",
+    bot: "You've been debugging a critical logic error for 3 hours. Sprint deadline in 2 hours.",
+    options: [
+      { text: "Escalate to senior dev immediately to avoid missing sprint.", level: 2 },
+      { text: "Take a 5-min break, then try a completely different debugging approach.", level: 3 },
+      { text: "Fix it, then add a Wiki note so the team avoids this specific error in future.", level: 4 }
+    ]
+  }
+];
+
+const phase2Scenarios = [
+  {
+    id: "p2s1", dimension: "accountability",
+    situation: "You spot a minor edge-case flaw in your code after it's already merged to Staging. Rank these actions 1st to 3rd:",
+    options: [
+      { text: "Wait for QA to flag it — if they miss it, it's probably not critical.", level: 1 },
+      { text: "Create a follow-up ticket and inform the lead; fix it next sub-sprint.", level: 2 },
+      { text: "Fix it now and push a patch immediately — keep Staging pristine.", level: 4 }
+    ]
+  },
+  {
+    id: "p2s2", dimension: "actionOrientation",
+    situation: "Critical feature needed urgently. Rank your approach 1st to 3rd:",
+    options: [
+      { text: "Defer until quality can be guaranteed, even if deadline slips.", level: 2 },
+      { text: "Ship a minimal viable version with known risks; plan a follow-up patch.", level: 3 },
+      { text: "Pause non-critical work, reallocate focus, and deliver with full tests.", level: 4 }
+    ]
+  }
+];
+
+const phase3Questions = [
+  {
+    id: "p3q1", dimension: "accountability",
+    question: "Why would you fix a self-discovered bug immediately rather than waiting for QA?",
+    options: [
+      { text: "I own the outcome. An open bug in Staging is my responsibility.", level: 4 },
+      { text: "Team process requires it — open bugs on Staging get flagged.", level: 2 }
+    ]
+  },
+  {
+    id: "p3q2", dimension: "actionOrientation",
+    question: "Why do you start boilerplate work while waiting for missing docs?",
+    options: [
+      { text: "I don't want to waste sprint time — I'll adjust details when specs arrive.", level: 3 },
+      { text: "I want the lead to see I'm proactive and not blocked.", level: 2 }
+    ]
+  },
+  {
+    id: "p3q3", dimension: "perseverance",
+    question: "What drives you to stay with a bug past 2 hours instead of escalating?",
+    options: [
+      { text: "I feel personally responsible for the ticket — it's not done until it's done.", level: 4 },
+      { text: "I don't want to look like I give up easily in front of the team.", level: 2 }
+    ]
+  }
+];
+
+/* ======================================================================
+   CONSTANTS
+====================================================================== */
+
+const PHASE1_TIMER = 12;
+const PHASE2_TIMER = 20;
+const TRANSITION_MS = 1800;
+const LOG_MS = 850;
+
+const DIMENSION_LABEL = {
+  accountability:    "Ownership / Accountability",
+  actionOrientation: "Action Orientation",
+  perseverance:      "Perseverance"
+};
+
+const LEVEL_META = {
+  1: { name: "Emerging",   title: "Observer",      accent: "#f87171", icon: "sprout" },
+  2: { name: "Developing", title: "Apprentice",    accent: "#fbbf24", icon: "flame"  },
+  3: { name: "Effective",  title: "Finisher",      accent: "#4d9fff", icon: "shield" },
+  4: { name: "Master",     title: "Accelerator",   accent: "#4ade80", icon: "bolt"   }
+};
+
+const LEVEL_SUMMARY = {
+  1: "Hesitates under pressure; defers decisions and minimizes personal exposure. Foundational coaching on initiative and closure required.",
+  2: "Emerging awareness of accountability; still leans on team structure to resolve ambiguity. Developing but not yet consistently proactive.",
+  3: "Completes what they start; takes reasonable initiative and drives tickets to done. Next edge: anticipate blockers ahead of time.",
+  4: "Drives outcomes end-to-end; removes ambiguity, owns edge cases, accelerates the team. Ready for stretch scope and mentorship."
+};
+
+const DEV_TIP = {
+  accountability:    "Treat every self-discovered issue as yours to resolve before handoff. Close the loop proactively rather than waiting for QA to surface it.",
+  actionOrientation: "When blocked on inputs, scaffold what you can, isolate unknowns, draft clarification questions. Never let sprint time go idle.",
+  perseverance:      "Before escalating a stuck bug, switch approach (binary-search, new hypothesis, fresh logs). Document recovered defects so the team compounds."
+};
+
+/* ======================================================================
+   SCORING
+====================================================================== */
+
+function computeResults(p1, p2, p3) {
+  const p2Scored = p2.map(a => ({
+    id: a.id, dimension: a.dimension, level: a.rankings[0].level, rankings: a.rankings
+  }));
+  const all = [...p1, ...p2Scored, ...p3];
+  const byDim = {};
+  for (const a of all) (byDim[a.dimension] ||= []).push(a.level);
+  const avg = arr => arr.reduce((s,n)=>s+n,0)/arr.length;
+  const dimScores = {
+    accountability:    byDim.accountability ? avg(byDim.accountability) : 0,
+    actionOrientation: byDim.actionOrientation ? avg(byDim.actionOrientation) : 0,
+    perseverance:      byDim.perseverance ? avg(byDim.perseverance) : 0
+  };
+  const finalScore =
+    dimScores.accountability * 0.40 +
+    dimScores.actionOrientation * 0.35 +
+    dimScores.perseverance * 0.25;
+
+  let level;
+  if (finalScore >= 3.25) level = 4;
+  else if (finalScore >= 2.50) level = 3;
+  else if (finalScore >= 1.75) level = 2;
+  else level = 1;
+
+  let consistencyFlag = false;
+  for (const p2a of p2) {
+    const last = p2a.rankings[p2a.rankings.length - 1];
+    if (last.level === 4) {
+      const p1m = p1.find(x => x.dimension === p2a.dimension);
+      if (p1m && p1m.level >= 3) { consistencyFlag = true; break; }
+    }
+  }
+
+  const entries = Object.entries(dimScores).filter(([,v]) => v > 0);
+  const weakest   = entries.slice().sort((a,b) => a[1] - b[1])[0][0];
+  const strongest = entries.slice().sort((a,b) => b[1] - a[1])[0][0];
+
+  return { dimScores, finalScore, level, consistencyFlag, weakest, strongest };
+}
+
+/* ======================================================================
+   HOOKS
+====================================================================== */
+
+function useTypewriter(text, speed = 20, start = true) {
+  const [out, setOut] = useState("");
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    if (!start) { setOut(text); setDone(true); return; }
+    setOut(""); setDone(false);
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setOut(text.slice(0, i));
+      if (i >= text.length) { clearInterval(id); setDone(true); }
+    }, speed);
+    return () => clearInterval(id);
+  }, [text, speed, start]);
+  return { text: out, done };
+}
+
+function useCountUp(target, duration = 1400, start = true) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    const t0 = performance.now();
+    let raf;
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setV(target * eased);
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration, start]);
+  return v;
+}
+
+/* ======================================================================
+   ICONS (inline)
+====================================================================== */
+
+const Icon = ({ name, className = "w-5 h-5", stroke = 1.8 }) => {
+  const p = { fill: "none", stroke: "currentColor", strokeWidth: stroke, strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (name) {
+    case "bolt":    return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>;
+    case "shield":  return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 3 4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>;
+    case "flame":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 2s4 4 4 9a4 4 0 0 1-8 0c0-2 1-3 1-5Z"/><path d="M12 22a7 7 0 0 0 7-7c0-3-2-5-2-5"/></svg>;
+    case "sprout":  return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 22V10"/><path d="M12 10c0-4 4-6 8-6 0 4-2 8-8 8Z"/><path d="M12 14c0-4-4-6-8-6 0 4 2 8 8 8"/></svg>;
+    case "target":  return <svg viewBox="0 0 24 24" className={className} {...p}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>;
+    case "spark":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="m12 3 2 6 6 2-6 2-2 6-2-6-6-2 6-2Z"/></svg>;
+    case "chip":    return <svg viewBox="0 0 24 24" className={className} {...p}><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 9h6v6H9zM9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg>;
+    case "cpu":     return <svg viewBox="0 0 24 24" className={className} {...p}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M15 2v2M15 20v2M9 2v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2"/></svg>;
+    case "pulse":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>;
+    case "alert":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 3 2 21h20L12 3Z"/><path d="M12 10v5M12 18h.01"/></svg>;
+    case "trophy":  return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M8 3h8v4a4 4 0 0 1-8 0V3Z"/><path d="M4 5h4M16 5h4M12 11v5M8 21h8M10 21v-5h4v5"/></svg>;
+    case "grip":    return <svg viewBox="0 0 24 24" className={className} {...p}><circle cx="9" cy="6"  r="1" fill="currentColor"/><circle cx="15" cy="6"  r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="18" r="1" fill="currentColor"/><circle cx="15" cy="18" r="1" fill="currentColor"/></svg>;
+    case "arrow-up":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 19V5M5 12l7-7 7 7"/></svg>;
+    case "arrow-down": return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
+    case "check":   return <svg viewBox="0 0 24 24" className={className} {...p}><path d="m5 12 5 5L20 7"/></svg>;
+    case "play":    return <svg viewBox="0 0 24 24" className={className} {...p}><path d="m6 4 14 8-14 8V4Z" fill="currentColor" stroke="none"/></svg>;
+    case "restart": return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>;
+    case "download":return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M12 4v12M6 12l6 6 6-6M4 20h16"/></svg>;
+    default: return null;
+  }
+};
+
+/* ======================================================================
+   BACKGROUND — PARTICLE FIELD + ORBS
+====================================================================== */
+
+function ParticleField() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const c = ref.current; if (!c) return;
+    const ctx = c.getContext("2d");
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    let W, H, particles;
+    const resize = () => {
+      W = c.width  = Math.floor(window.innerWidth  * DPR);
+      H = c.height = Math.floor(window.innerHeight * DPR);
+      c.style.width  = window.innerWidth + "px";
+      c.style.height = window.innerHeight + "px";
+      const count = Math.min(90, Math.floor((window.innerWidth * window.innerHeight) / 22000));
+      particles = Array.from({length: count}, () => ({
+        x: Math.random()*W, y: Math.random()*H,
+        vx: (Math.random()-0.5) * 0.35 * DPR,
+        vy: (Math.random()-0.5) * 0.35 * DPR,
+        r: (Math.random()*1.4 + 0.4) * DPR,
+        hue: Math.random() < 0.33 ? 0 : Math.random() < 0.5 ? 1 : 2
+      }));
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const palette = ["#4d9fff", "#b388ff", "#4ade80"];
+    const linkDist = 130 * DPR;
+
+    let raf;
+    const draw = () => {
+      ctx.clearRect(0,0,W,H);
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+        ctx.beginPath();
+        ctx.fillStyle = palette[p.hue];
+        ctx.globalAlpha = 0.55;
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i+1; j < particles.length; j++) {
+          const a = particles[i], b = particles[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d = Math.hypot(dx, dy);
+          if (d < linkDist) {
+            const alpha = (1 - d / linkDist) * 0.35;
+            ctx.strokeStyle = palette[a.hue];
+            ctx.globalAlpha = alpha;
+            ctx.lineWidth = 0.6 * DPR;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={ref} className="fixed inset-0 pointer-events-none" style={{ opacity: 0.55, zIndex: 0 }} />;
+}
+
+function AmbientOrbs() {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
+      <div className="orb" style={{ width: 520, height: 520, top: "-12%", left: "-8%", background: "#4d9fff", opacity: 0.18 }} />
+      <div className="orb" style={{ width: 460, height: 460, bottom: "-15%", right: "-10%", background: "#b388ff", opacity: 0.18, animationDelay: "-7s" }} />
+      <div className="orb" style={{ width: 380, height: 380, top: "30%", left: "60%", background: "#4ade80", opacity: 0.10, animationDelay: "-14s" }} />
+    </div>
+  );
+}
+
+/* ======================================================================
+   TOAST
+====================================================================== */
+
+function Toast({ message, tone = "elec", id }) {
+  if (!message) return null;
+  const toneMap = {
+    elec:   { color: "var(--elec)",   border: "rgba(77,159,255,0.4)",  bg: "rgba(77,159,255,0.08)" },
+    green:  { color: "var(--green)",  border: "rgba(74,222,128,0.4)",  bg: "rgba(74,222,128,0.08)" },
+    purple: { color: "var(--purple)", border: "rgba(179,136,255,0.4)", bg: "rgba(179,136,255,0.08)" }
+  };
+  const t = toneMap[tone] || toneMap.elec;
+  return (
+    <div key={id} className="toast">
+      <div
+        className="flex items-center gap-2.5 px-4 py-2.5 rounded-sm glass font-mono text-xs tracking-[0.15em]"
+        style={{ borderColor: t.border, background: t.bg, color: t.color }}
+      >
+        <Icon name="check" className="w-4 h-4" />
+        <span className="font-semibold">{message}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   CIRCULAR COUNTDOWN TIMER
+====================================================================== */
+
+function CircularTimer({ value, max, size = 72 }) {
+  const r = size/2 - 6;
+  const C = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(1, value / max));
+  const off = C * (1 - pct);
+  const critical = value <= 3;
+  const warn     = value <= max * 0.4;
+  const color = critical ? "#f87171" : warn ? "#fbbf24" : "#4ade80";
+  return (
+    <div className={"relative " + (critical ? "critical-tint" : "")}
+         style={{ width: size, height: size }}>
+      <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full -rotate-90">
+        <defs>
+          <linearGradient id={`tg-${size}`} x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%"  stopColor={color} />
+            <stop offset="100%" stopColor={critical ? "#fbbf24" : warn ? "#4ade80" : "#4d9fff"} />
+          </linearGradient>
+          <filter id="tglow"><feGaussianBlur stdDeviation="2" /></filter>
+        </defs>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+        <circle
+          cx={size/2} cy={size/2} r={r} fill="none"
+          stroke={`url(#tg-${size})`} strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray={C} strokeDashoffset={off}
+          style={{ transition: "stroke-dashoffset 100ms linear", filter: "drop-shadow(0 0 6px " + color + ")" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-display text-xl md:text-2xl font-bold tabular" style={{ color }}>
+          {Math.ceil(value)}
+        </span>
+        <span className="text-[9px] tracking-[0.25em] text-white/50 -mt-0.5">SEC</span>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   TOP BAR
+====================================================================== */
+
+function TopBar({ phaseLabel, phaseNum, totalPhases, scenarioIdx, scenarioTotal, timer, timerMax, right }) {
+  const totalSteps = phase1Scenarios.length + phase2Scenarios.length + phase3Questions.length;
+  const completedSteps =
+    Math.max(0, Math.min(phase1Scenarios.length, phaseNum === 1 ? scenarioIdx : phaseNum > 1 ? phase1Scenarios.length : 0)) +
+    Math.max(0, Math.min(phase2Scenarios.length, phaseNum === 2 ? scenarioIdx : phaseNum > 2 ? phase2Scenarios.length : 0)) +
+    Math.max(0, Math.min(phase3Questions.length,  phaseNum === 3 ? scenarioIdx : phaseNum > 3 ? phase3Questions.length : 0));
+  const overall = (completedSteps / totalSteps) * 100;
+
+  return (
+    <div className="glass-strong px-4 md:px-6 py-3 mb-6 flex items-center gap-4 md:gap-6">
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="relative">
+          <div className="w-8 h-8 rounded-sm flex items-center justify-center"
+               style={{ background: "linear-gradient(135deg,#4d9fff,#b388ff)", boxShadow: "0 0 18px #4d9fff77" }}>
+            <Icon name="cpu" className="w-4 h-4 text-white" />
+          </div>
+        </div>
+        <div className="leading-tight">
+          <div className="font-display text-[11px] md:text-xs tracking-[0.3em] text-white/70">CATALYST://PROTOCOL</div>
+          <div className="font-mono text-[10px] tracking-widest text-[var(--elec)]">mission-control · v0.3</div>
+        </div>
+      </div>
+
+      <div className="hidden md:block w-px h-8 bg-white/10" />
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-3 mb-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-display text-xs tracking-[0.2em] text-white/80">
+              PHASE <span className="text-[var(--elec)] font-bold">{phaseNum}</span>
+              <span className="text-white/40"> / {totalPhases}</span>
+            </span>
+            <span className="w-1 h-1 rounded-full bg-white/30" />
+            <span className="font-mono text-xs text-white/70">{phaseLabel}</span>
+            {scenarioTotal != null && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-white/30" />
+                <span className="font-mono text-xs text-white/60">
+                  Scenario <span className="text-[var(--purple)] font-semibold">{scenarioIdx + 1}</span>
+                  <span className="text-white/40"> of {scenarioTotal}</span>
+                </span>
+              </>
+            )}
+          </div>
+          <div className="text-[10px] tracking-[0.25em] text-white/50 tabular hidden sm:block">
+            {Math.round(overall)}% COMPLETE
+          </div>
+        </div>
+        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-[width] duration-700"
+            style={{
+              width: overall + "%",
+              background: "linear-gradient(90deg,#4d9fff,#b388ff,#4ade80)",
+              boxShadow: "0 0 12px #4d9fff88"
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="shrink-0">
+        {right ? right : (timer != null ? <CircularTimer value={timer} max={timerMax} /> : null)}
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   LANDING
+====================================================================== */
+
+function LandingView({ onStart }) {
+  const [name, setName] = useState("");
+  const canStart = name.trim().length >= 2;
+  const { text: sub } = useTypewriter("BEHAVIORAL SIMULATION INITIATED", 38);
+
+  return (
+    <div className="scene-enter relative min-h-[80vh] flex items-center justify-center px-4">
+      <div className="w-full max-w-4xl">
+        <div className="flex items-center gap-3 mb-6 justify-center">
+          <span className="flex items-center gap-2 px-3 py-1 rounded-full glass text-[11px] tracking-[0.25em] font-mono text-[var(--elec)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
+            SYSTEM · ONLINE
+          </span>
+          <span className="px-3 py-1 rounded-full glass text-[11px] tracking-[0.25em] font-mono text-white/60">
+            BAND 01 // ENGINEER
+          </span>
+        </div>
+
+        <h1 className="font-display text-center text-5xl md:text-7xl lg:text-8xl font-black leading-[0.9]">
+          <span className="reveal glow-elec">CATALYST</span>
+          <br />
+          <span className="reveal glow-purple">PROTOCOL</span>
+        </h1>
+
+        <div className="mt-6 text-center font-mono text-xs md:text-sm tracking-[0.4em] text-white/70 cursor">
+          {sub || " "}
+        </div>
+
+        <div className="mt-10 max-w-xl mx-auto glass-strong p-5 md:p-6">
+          <div className="font-mono text-[11px] tracking-[0.3em] text-[var(--elec)] mb-3">
+            &gt; IDENTIFY OPERATOR
+          </div>
+          <div className="flex items-center gap-3 border border-white/15 rounded-sm bg-black/40 px-3 py-3 focus-within:border-[var(--elec)] focus-within:shadow-[0_0_28px_-8px_rgba(77,159,255,0.7)] transition">
+            <span className="font-mono text-[var(--elec)]">$</span>
+            <input
+              autoFocus
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && canStart) onStart(name.trim()); }}
+              placeholder="enter callsign"
+              className="flex-1 bg-transparent outline-none text-white placeholder-white/30 tracking-wide font-mono"
+            />
+            <span className="text-[10px] tracking-widest text-white/40 hidden md:inline">↵ ENTER</span>
+          </div>
+
+          <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+            {[
+              { k: "SJT",  s: "3 × 12s",  c: "var(--elec)" },
+              { k: "RANK", s: "2 × 20s",  c: "var(--purple)" },
+              { k: "WHY",  s: "3 × open", c: "var(--green)" }
+            ].map(m => (
+              <div key={m.k} className="glass p-3">
+                <div className="font-display text-xs tracking-[0.25em]" style={{ color: m.c }}>{m.k}</div>
+                <div className="font-mono text-[10px] text-white/50 mt-0.5">{m.s}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8 flex items-center justify-center">
+          <button
+            disabled={!canStart}
+            onClick={() => onStart(name.trim())}
+            className="btn-primary px-10 py-4 font-display text-sm md:text-base flex items-center gap-3"
+          >
+            <Icon name="play" className="w-4 h-4" />
+            START SIMULATION
+          </button>
+        </div>
+
+        <div className="mt-6 text-center font-mono text-[10px] tracking-[0.3em] text-white/40">
+          NO CORRECT ANSWERS · EVERY DECISION SHAPES YOUR SIGNATURE
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   LOADING (transition)
+====================================================================== */
+
+function LoadingView({ messages }) {
+  const [pct, setPct] = useState(0);
+  const [msgIdx, setMsgIdx] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    let raf;
+    const tick = () => {
+      const p = Math.min(100, ((Date.now() - start) / TRANSITION_MS) * 100);
+      setPct(p);
+      if (p < 100) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  useEffect(() => {
+    const step = TRANSITION_MS / messages.length;
+    const id = setInterval(() => setMsgIdx(i => Math.min(messages.length - 1, i + 1)), step);
+    return () => clearInterval(id);
+  }, [messages]);
+
+  return (
+    <div className="scene-enter max-w-2xl mx-auto flex flex-col items-center justify-center py-24 px-4">
+      <div className="relative w-40 h-40 mb-8">
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: "conic-gradient(from 0deg, #4d9fff, #b388ff, #4ade80, #4d9fff)",
+            animation: "spin 3s linear infinite",
+            maskImage: "radial-gradient(circle, transparent 65%, black 66%)",
+            WebkitMaskImage: "radial-gradient(circle, transparent 65%, black 66%)"
+          }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <div className="font-display text-3xl font-bold text-white tabular glow-elec">{pct.toFixed(0)}<span className="text-white/40 text-xl">%</span></div>
+            <div className="loader-dots mt-2"><span /><span /><span /></div>
+          </div>
+        </div>
+      </div>
+      <div className="font-mono text-[11px] tracking-[0.4em] text-[var(--elec)] mb-2">// TRANSMITTING</div>
+      <div className="font-display text-lg md:text-xl text-white tracking-widest min-h-[32px] text-center">
+        {messages[msgIdx]}
+      </div>
+      <div className="mt-6 space-y-1.5 text-xs font-mono w-full max-w-md">
+        {messages.map((m, i) => {
+          const state = i < msgIdx ? "done" : i === msgIdx ? "active" : "pending";
+          return (
+            <div key={m} className="flex items-center gap-3">
+              <div className={
+                "w-1.5 h-1.5 rounded-full transition " +
+                (state === "done" ? "bg-[var(--green)]" :
+                 state === "active" ? "bg-[var(--elec)] animate-pulse" :
+                                      "bg-white/15")
+              } />
+              <span className={
+                "tracking-[0.2em] transition " +
+                (state === "done" ? "text-white/60 line-through" :
+                 state === "active" ? "text-white" :
+                                      "text-white/25")
+              }>
+                {state === "done" ? "✓ " : state === "active" ? "» " : "  "}{m}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   SIMULATION SCREEN (Phase 1 — chat SJT)
+====================================================================== */
+
+function SimulationChatScreen({ scenarioIdx, total, scenario, timeLeft, onSelect, logging, lastPicked, phaseNum }) {
+  const { text, done } = useTypewriter(scenario.bot, 16);
+
+  return (
+    <div className="scene-enter">
+      <TopBar
+        phaseLabel="SJT · BOT DIALOGUE"
+        phaseNum={phaseNum} totalPhases={3}
+        scenarioIdx={scenarioIdx} scenarioTotal={total}
+        timer={timeLeft} timerMax={PHASE1_TIMER}
+      />
+
+      <div className="grid lg:grid-cols-5 gap-6 items-start">
+        {/* LEFT — Dialogue console */}
+        <div className="lg:col-span-3">
+          <div className="glass-strong p-5 md:p-7 relative overflow-hidden">
+            <div className="orb absolute -top-16 -left-16 w-64 h-64" style={{ background: "#4d9fff", opacity: 0.18 }} />
+            <div className="flex items-center gap-2 mb-5">
+              <span className="font-mono text-[10px] tracking-[0.3em] text-white/40">// INCOMING TRANSMISSION</span>
+              <div className="flex gap-1 ml-auto">
+                <div className="w-2 h-2 rounded-full bg-[#f87171]" />
+                <div className="w-2 h-2 rounded-full bg-[#fbbf24]" />
+                <div className="w-2 h-2 rounded-full bg-[#4ade80]" />
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="relative shrink-0">
+                <div
+                  className="w-14 h-14 rounded-sm flex items-center justify-center font-display font-bold text-white pulse-ring"
+                  style={{ background: "linear-gradient(135deg,#4d9fff,#b388ff)", color: "#fff" }}
+                >
+                  A·R
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-sm font-bold text-white tracking-wider">ARIA</span>
+                  <span className="font-mono text-[10px] text-white/40">v2.4 · assistant</span>
+                  <span className="ml-auto flex items-center gap-1.5 font-mono text-[10px] text-[var(--green)]">
+                    <span className="w-1.5 h-1.5 bg-[var(--green)] rounded-full animate-pulse" />
+                    ONLINE
+                  </span>
+                </div>
+                <div className={"mt-3 text-[15px] md:text-base leading-relaxed text-white/95 " + (done ? "" : "cursor")}>
+                  {text}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between font-mono text-[10px] tracking-[0.25em] text-white/40">
+              <span>SIGNAL: STABLE</span>
+              <span>ENCRYPTION: AES-256</span>
+              <span className="hidden md:inline">DIM: {scenario.dimension.toUpperCase()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT — Options */}
+        <div className="lg:col-span-2">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="font-mono text-[11px] tracking-[0.3em] text-white/50">// RESPONSE MATRIX</div>
+            <div className="font-mono text-[10px] tracking-[0.25em] text-white/30">SELECT 01</div>
+          </div>
+          <div className="stagger space-y-3">
+            {scenario.options.map((opt, i) => {
+              const isPicked = lastPicked && lastPicked.text === opt.text;
+              return (
+                <button
+                  key={i}
+                  disabled={logging}
+                  onClick={() => onSelect(opt)}
+                  className={"opt p-4 md:p-5 " + (isPicked ? "active" : "")}
+                >
+                  <div className="flex items-start gap-3 relative z-10">
+                    <div className="shrink-0">
+                      <div
+                        className="w-8 h-8 rounded-sm flex items-center justify-center font-display font-bold text-xs tracking-wider border"
+                        style={{
+                          borderColor: isPicked ? "var(--green)" : "rgba(255,255,255,0.15)",
+                          color: isPicked ? "var(--green)" : "var(--elec)",
+                          background: isPicked ? "rgba(74,222,128,0.08)" : "rgba(77,159,255,0.04)"
+                        }}
+                      >
+                        {String.fromCharCode(65 + i)}
+                      </div>
+                    </div>
+                    <div className="text-[13.5px] md:text-sm leading-relaxed text-white/95">
+                      {opt.text}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-4 font-mono text-[10px] tracking-[0.25em] text-white/30 text-center">
+            TAP A RESPONSE — TIMER AUTO-SELECTS LOWEST ON EXPIRY
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   RANK SCREEN (Phase 2 — drag-and-drop)
+====================================================================== */
+
+function RankScreen({ scenarioIdx, total, scenario, timeLeft, onSubmit, logging, phaseNum, onOrderChange, initialOrder }) {
+  // order[i] = index into scenario.options (0..n-1)
+  const [order, setOrder] = useState(initialOrder || scenario.options.map((_, i) => i));
+  useEffect(() => { setOrder(initialOrder || scenario.options.map((_, i) => i)); }, [scenario.id]);
+
+  const [draggedPos, setDraggedPos] = useState(null);
+  const [overPos, setOverPos] = useState(null);
+  const [justDroppedPos, setJustDroppedPos] = useState(null);
+
+  useEffect(() => {
+    onOrderChange && onOrderChange(order);
+  }, [order]);
+
+  const move = (fromPos, toPos) => {
+    if (fromPos === toPos || toPos < 0 || toPos >= order.length) return;
+    const next = [...order];
+    const [m] = next.splice(fromPos, 1);
+    next.splice(toPos, 0, m);
+    setOrder(next);
+    setJustDroppedPos(toPos);
+    setTimeout(() => setJustDroppedPos(null), 360);
+  };
+
+  const rankLabel = (n) => n === 1 ? "1ST" : n === 2 ? "2ND" : n === 3 ? "3RD" : `${n}TH`;
+  const rankColor = (n) => n === 1 ? "#4ade80" : n === 2 ? "#4d9fff" : "#b388ff";
+
+  const handleSubmit = () => onSubmit(order);
+
+  return (
+    <div className="scene-enter">
+      <TopBar
+        phaseLabel="RANK · PRIORITY MAP"
+        phaseNum={phaseNum} totalPhases={3}
+        scenarioIdx={scenarioIdx} scenarioTotal={total}
+        timer={timeLeft} timerMax={PHASE2_TIMER}
+      />
+
+      <div className="max-w-3xl mx-auto">
+        <div className="glass-strong p-5 md:p-6 mb-6 relative overflow-hidden">
+          <div className="orb absolute -bottom-20 -right-16 w-64 h-64" style={{ background: "#b388ff", opacity: 0.18 }} />
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-mono text-[10px] tracking-[0.3em] text-[var(--purple)]">// STRATEGIC CHOICE</div>
+            <div className="font-mono text-[10px] tracking-[0.25em] text-white/40">
+              DIM: {scenario.dimension.toUpperCase()}
+            </div>
+          </div>
+          <div className="text-[15px] md:text-base leading-relaxed text-white/95">{scenario.situation}</div>
+          <div className="mt-3 flex items-center gap-2 text-[11px] font-mono text-white/40">
+            <Icon name="grip" className="w-3.5 h-3.5" />
+            <span className="tracking-[0.2em]">DRAG TO REORDER · OR USE ARROWS · TOP = HIGHEST PRIORITY</span>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {order.map((optIdx, pos) => {
+            const opt = scenario.options[optIdx];
+            const n = pos + 1;
+            const col = rankColor(n);
+            const isDragged = draggedPos === pos;
+            const isOver = overPos === pos && draggedPos !== null && draggedPos !== pos;
+            const isJust = justDroppedPos === pos;
+            return (
+              <div
+                key={optIdx}
+                draggable={!logging}
+                onDragStart={(e) => {
+                  setDraggedPos(pos);
+                  e.dataTransfer.effectAllowed = "move";
+                  try { e.dataTransfer.setData("text/plain", String(pos)); } catch(_) {}
+                }}
+                onDragEnd={() => { setDraggedPos(null); setOverPos(null); }}
+                onDragOver={(e) => { e.preventDefault(); setOverPos(pos); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedPos !== null) move(draggedPos, pos);
+                  setDraggedPos(null); setOverPos(null);
+                }}
+                className={
+                  "rank-card p-4 md:p-5 flex items-center gap-4 " +
+                  (isDragged ? "dragging " : "") +
+                  (isOver ? "drop-target " : "") +
+                  (isJust ? "just-dropped " : "")
+                }
+                style={{
+                  borderColor: col + "88",
+                  boxShadow: `0 0 0 1px ${col}55, 0 10px 30px -12px ${col}66, inset 0 1px 0 rgba(255,255,255,0.05)`
+                }}
+              >
+                <div className="shrink-0 flex flex-col items-center gap-1">
+                  <Icon name="grip" className="w-4 h-4 text-white/30" />
+                  <div className="flex flex-col gap-0.5">
+                    <button
+                      onClick={() => move(pos, pos - 1)}
+                      disabled={pos === 0 || logging}
+                      className="w-5 h-5 rounded-sm flex items-center justify-center border border-white/10 hover:border-[var(--elec)] hover:text-[var(--elec)] transition text-white/50 disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:text-white/50"
+                      aria-label="Move up"
+                    ><Icon name="arrow-up" className="w-3 h-3" stroke={2.2} /></button>
+                    <button
+                      onClick={() => move(pos, pos + 1)}
+                      disabled={pos === order.length - 1 || logging}
+                      className="w-5 h-5 rounded-sm flex items-center justify-center border border-white/10 hover:border-[var(--elec)] hover:text-[var(--elec)] transition text-white/50 disabled:opacity-30 disabled:hover:border-white/10 disabled:hover:text-white/50"
+                      aria-label="Move down"
+                    ><Icon name="arrow-down" className="w-3 h-3" stroke={2.2} /></button>
+                  </div>
+                </div>
+
+                <div
+                  className="shrink-0 w-16 h-16 rounded-sm flex flex-col items-center justify-center font-display font-bold"
+                  style={{
+                    background: `linear-gradient(135deg, ${col}22, ${col}08)`,
+                    border: `1px solid ${col}`,
+                    color: col,
+                    boxShadow: `inset 0 0 20px ${col}22, 0 0 18px ${col}44`
+                  }}
+                >
+                  <span className="text-[9px] tracking-[0.2em] opacity-80">RANK</span>
+                  <span className="text-lg leading-none mt-0.5">{rankLabel(n)}</span>
+                </div>
+
+                <div className="flex-1 text-[14px] md:text-sm leading-relaxed text-white/95">
+                  {opt.text}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex gap-1.5">
+            {order.map((_, i) => (
+              <div
+                key={i}
+                className="w-10 h-1 rounded-full transition-all"
+                style={{ background: rankColor(i+1), boxShadow: `0 0 10px ${rankColor(i+1)}88` }}
+              />
+            ))}
+          </div>
+          <button
+            disabled={logging}
+            onClick={handleSubmit}
+            className="btn-primary px-8 py-3 font-display text-sm flex items-center gap-2"
+          >
+            <Icon name="check" className="w-4 h-4" />
+            CONFIRM PRIORITY
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   REFLECTION (Phase 3 — WHY probe)
+====================================================================== */
+
+function ReflectionScreen({ scenarioIdx, total, question, onSelect, logging, lastPicked, phaseNum }) {
+  const { text, done } = useTypewriter(question.question, 18);
+  return (
+    <div className="scene-enter">
+      <TopBar
+        phaseLabel="WHY · ATTRIBUTION"
+        phaseNum={phaseNum} totalPhases={3}
+        scenarioIdx={scenarioIdx} scenarioTotal={total}
+        right={
+          <div className="flex items-center gap-2 px-3 py-2 rounded-sm glass font-mono text-[10px] tracking-[0.25em] text-[var(--purple)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--purple)] animate-pulse" />
+            REFLECTION
+          </div>
+        }
+      />
+
+      <div className="max-w-3xl mx-auto">
+        <div className="glass-strong p-6 md:p-10 mb-6 text-center relative overflow-hidden">
+          <div className="orb absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80" style={{ background: "#b388ff", opacity: 0.22 }} />
+          <div className="relative">
+            <div className="font-mono text-[11px] tracking-[0.4em] text-[var(--purple)] mb-4 flex items-center justify-center gap-2">
+              <Icon name="pulse" className="w-3.5 h-3.5" />
+              WHY.PROBE
+            </div>
+            <div className={"font-display text-xl md:text-3xl leading-snug text-white/95 max-w-2xl mx-auto " + (done ? "" : "cursor")}>
+              {text}
+            </div>
+            <div className="mt-3 font-mono text-[10px] tracking-[0.3em] text-white/40">
+              DIM: {question.dimension.toUpperCase()}
+            </div>
+          </div>
+        </div>
+
+        <div className="stagger grid md:grid-cols-2 gap-3">
+          {question.options.map((opt, i) => {
+            const isPicked = lastPicked && lastPicked.text === opt.text;
+            return (
+              <button
+                key={i}
+                disabled={logging}
+                onClick={() => onSelect(opt)}
+                className={"opt p-5 md:p-6 h-full " + (isPicked ? "active" : "")}
+              >
+                <div className="flex items-start justify-between mb-3 relative z-10">
+                  <div
+                    className="font-display text-xs tracking-[0.3em]"
+                    style={{ color: isPicked ? "var(--green)" : "var(--purple)" }}
+                  >
+                    CHOICE · {String.fromCharCode(65 + i)}
+                  </div>
+                  <div className="w-7 h-7 rounded-sm flex items-center justify-center border border-white/15 text-white/50 text-xs">
+                    {i + 1}
+                  </div>
+                </div>
+                <div className="text-[14px] md:text-[15px] leading-relaxed text-white/95 relative z-10">
+                  {opt.text}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ======================================================================
+   RESULTS DASHBOARD
+====================================================================== */
+
+function ScoreMeter({ value, max = 4, level }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), 300); return () => clearTimeout(t); }, []);
+  const v = useCountUp(value, 1800, ready);
+  const R = 86;
+  const C = 2 * Math.PI * R;
+  const pct = Math.max(0, Math.min(1, v / max));
+  const off = C * (1 - pct);
+  const accent = LEVEL_META[level].accent;
+  return (
+    <div className="relative" style={{ width: 220, height: 220 }}>
+      <div className="absolute inset-0 badge-halo rounded-full" style={{ opacity: 0.6 }} />
+      <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90">
+        <defs>
+          <linearGradient id="meterGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%"   stopColor="#4d9fff" />
+            <stop offset="55%"  stopColor="#b388ff" />
+            <stop offset="100%" stopColor={accent} />
+          </linearGradient>
+        </defs>
+        <circle cx="100" cy="100" r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" />
+        <circle
+          cx="100" cy="100" r={R} fill="none"
+          stroke="url(#meterGrad)" strokeWidth="10" strokeLinecap="round"
+          strokeDasharray={C} strokeDashoffset={off}
+          style={{ transition: "stroke-dashoffset 1.8s cubic-bezier(.2,.8,.2,1)", filter: `drop-shadow(0 0 12px ${accent}cc)` }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div className="font-mono text-[10px] tracking-[0.4em] text-white/50 mb-1">FINAL SCORE</div>
+        <div className="font-display text-5xl md:text-6xl font-black text-white tabular glow-elec">
+          {v.toFixed(2)}
+        </div>
+        <div className="font-mono text-xs text-white/40 tabular">/ {max.toFixed(2)}</div>
+      </div>
+    </div>
+  );
+}
+
+function LevelBadge({ level }) {
+  const m = LEVEL_META[level];
+  return (
+    <div className="relative badge-halo rounded-sm inline-block">
+      <div
+        className="relative glass-strong px-6 py-5 rounded-sm"
+        style={{ borderColor: m.accent + "88", boxShadow: `0 0 0 1px ${m.accent}33, 0 20px 60px -15px ${m.accent}55, inset 0 1px 0 rgba(255,255,255,0.08)` }}
+      >
+        <div className="flex items-center gap-4">
+          <div
+            className="w-14 h-14 rounded-sm flex items-center justify-center shrink-0"
+            style={{
+              background: `linear-gradient(135deg, ${m.accent}, ${m.accent}88)`,
+              boxShadow: `0 0 24px ${m.accent}aa, inset 0 1px 0 rgba(255,255,255,0.25)`
+            }}
+          >
+            <Icon name={m.icon} className="w-7 h-7 text-white" stroke={2} />
+          </div>
+          <div className="leading-tight">
+            <div className="font-mono text-[10px] tracking-[0.35em] text-white/50">ACHIEVEMENT UNLOCKED</div>
+            <div className="font-display text-xl md:text-2xl font-black text-white mt-1" style={{ textShadow: `0 0 16px ${m.accent}aa` }}>
+              LEVEL {level} · {m.name.toUpperCase()}
+            </div>
+            <div className="font-mono text-xs mt-1" style={{ color: m.accent }}>
+              "The {m.title}"
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DimensionBar({ label, value, delay = 0 }) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReady(true), delay); return () => clearTimeout(t); }, [delay]);
+  const v = useCountUp(value, 1400, ready);
+  const pct = Math.max(0, Math.min(100, (v / 4) * 100));
+  const color = value >= 3 ? "#4ade80" : value >= 2 ? "#fbbf24" : "#f87171";
+  return (
+    <div>
+      <div className="flex justify-between items-end mb-2">
+        <span className="font-mono text-xs tracking-[0.15em] text-white/75">{label}</span>
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-display text-lg font-bold tabular" style={{ color, textShadow: `0 0 10px ${color}88` }}>
+            {v.toFixed(2)}
+          </span>
+          <span className="font-mono text-[10px] text-white/40">/ 4.00</span>
+        </div>
+      </div>
+      <div className="h-2.5 bg-white/5 rounded-full overflow-hidden relative border border-white/5">
+        <div
+          className="h-full rounded-full relative"
+          style={{
+            width: pct + "%",
+            background: `linear-gradient(90deg, ${color}cc, ${color})`,
+            boxShadow: `0 0 14px ${color}99`,
+            transition: "width 1.4s cubic-bezier(.2,.8,.2,1)"
+          }}
+        >
+          <div className="absolute inset-0 opacity-50"
+               style={{
+                 background: "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)",
+                 backgroundSize: "200% 100%",
+                 animation: "shimmer 2.6s linear infinite"
+               }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InsightCard({ icon, title, body, tone = "elec", delay = 0 }) {
+  const toneMap = {
+    elec:   { c: "var(--elec)",   bg: "rgba(77,159,255,0.08)"  },
+    purple: { c: "var(--purple)", bg: "rgba(179,136,255,0.08)" },
+    green:  { c: "var(--green)",  bg: "rgba(74,222,128,0.08)"  },
+    warn:   { c: "var(--warn)",   bg: "rgba(251,191,36,0.08)"  }
+  };
+  const t = toneMap[tone] || toneMap.elec;
+  return (
+    <div
+      className="glass p-5 relative overflow-hidden scene-enter"
+      style={{ animationDelay: `${delay}ms`, borderColor: t.c + "44" }}
+    >
+      <div
+        className="absolute -top-10 -right-10 w-32 h-32 rounded-full"
+        style={{ background: t.c, opacity: 0.15, filter: "blur(40px)" }}
+      />
+      <div className="relative flex items-start gap-3">
+        <div
+          className="w-10 h-10 rounded-sm flex items-center justify-center shrink-0"
+          style={{
+            background: t.bg, border: `1px solid ${t.c}55`,
+            color: t.c, boxShadow: `inset 0 0 16px ${t.c}22`
+          }}
+        >
+          <Icon name={icon} className="w-5 h-5" stroke={2} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-display text-sm font-bold tracking-wider" style={{ color: t.c }}>
+            {title}
+          </div>
+          <div className="text-sm text-white/80 leading-relaxed mt-1.5">
+            {body}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfettiBurst({ show }) {
+  const parts = useMemo(() => {
+    if (!show) return [];
+    return Array.from({ length: 90 }, (_, i) => ({
+      id: i,
+      angle: Math.random() * Math.PI * 2,
+      dist: 160 + Math.random() * 420,
+      delay: Math.random() * 0.3,
+      duration: 1.3 + Math.random() * 1.6,
+      size: 4 + Math.random() * 8,
+      color: ["#4d9fff", "#b388ff", "#4ade80", "#fbbf24"][Math.floor(Math.random() * 4)]
+    }));
+  }, [show]);
+  if (!show) return null;
+  return (
+    <div className="pointer-events-none fixed inset-0 flex items-start justify-center z-40" aria-hidden>
+      <style>{`
+        @keyframes confetti-fly {
+          0% { transform: translate(0,0) rotate(0deg); opacity: 1; }
+          100% { transform: translate(var(--tx), var(--ty)) rotate(900deg); opacity: 0; }
+        }
+      `}</style>
+      <div className="relative top-[22vh]">
+        {parts.map(p => {
+          const tx = Math.cos(p.angle) * p.dist;
+          const ty = Math.sin(p.angle) * p.dist + 140;
+          return (
+            <span
+              key={p.id}
+              style={{
+                position: "absolute",
+                width: p.size, height: p.size,
+                background: p.color,
+                borderRadius: Math.random() > 0.5 ? "2px" : "9999px",
+                boxShadow: `0 0 12px ${p.color}`,
+                animation: `confetti-fly ${p.duration}s cubic-bezier(.1,.7,.2,1) ${p.delay}s forwards`,
+                ["--tx"]: `${tx}px`,
+                ["--ty"]: `${ty}px`
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ResultsDashboard({ name, result, onRestart }) {
+  const [reveal, setReveal] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReveal(true), 500); return () => clearTimeout(t); }, []);
+  const m = LEVEL_META[result.level];
+
+  return (
+    <div className="scene-enter max-w-6xl mx-auto">
+      <ConfettiBurst show={reveal && result.level >= 3} />
+
+      {/* HEADER */}
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
+          <span className="font-mono text-[11px] tracking-[0.4em] text-[var(--green)]">SIMULATION COMPLETE</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />
+        </div>
+        <h1 className="font-display text-3xl md:text-5xl font-black text-white glow-elec tracking-wide">
+          MISSION REPORT
+        </h1>
+        <div className="mt-3 font-mono text-sm text-white/60 tracking-widest">
+          OPERATOR · <span className="text-white font-semibold">{name.toUpperCase()}</span>
+        </div>
+      </div>
+
+      {/* HERO: Score + Badge */}
+      <div className="glass-strong p-6 md:p-10 mb-6 relative overflow-hidden">
+        <div className="orb absolute -top-20 -left-16 w-80 h-80" style={{ background: m.accent, opacity: 0.2 }} />
+        <div className="orb absolute -bottom-16 -right-16 w-72 h-72" style={{ background: "#b388ff", opacity: 0.2, animationDelay: "-10s" }} />
+        <div className="relative grid lg:grid-cols-2 gap-8 items-center">
+          <div className="flex justify-center">
+            <ScoreMeter value={result.finalScore} level={result.level} />
+          </div>
+          <div className="space-y-5 text-center lg:text-left">
+            <LevelBadge level={result.level} />
+            <div className="glass p-4 md:p-5">
+              <div className="font-mono text-[10px] tracking-[0.3em] text-white/50 mb-2">BEHAVIORAL SIGNATURE</div>
+              <div className="text-sm md:text-base text-white/90 leading-relaxed">
+                {LEVEL_SUMMARY[result.level]}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Consistency flag */}
+      {result.consistencyFlag && (
+        <div
+          className="glass mb-6 p-4 md:p-5 flex items-start gap-4 scene-enter relative overflow-hidden"
+          style={{ borderColor: "rgba(251,191,36,0.45)" }}
+        >
+          <div
+            className="absolute -top-10 -right-10 w-32 h-32 rounded-full"
+            style={{ background: "#fbbf24", opacity: 0.12, filter: "blur(40px)" }}
+          />
+          <div
+            className="w-10 h-10 rounded-sm flex items-center justify-center shrink-0"
+            style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.4)", color: "#fbbf24" }}
+          >
+            <Icon name="alert" className="w-5 h-5" />
+          </div>
+          <div className="relative">
+            <div className="font-display font-bold text-[var(--warn)] tracking-widest text-sm">
+              CONSISTENCY GAP DETECTED
+            </div>
+            <div className="text-sm text-white/80 mt-1">
+              Phase 02 signature diverged from stated behavior in Phase 01. Recommend a structured interview follow-up to probe stated vs. revealed preference.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DIMENSIONS */}
+      <div className="grid lg:grid-cols-3 gap-6 mb-6">
+        <div className="lg:col-span-2 glass-strong p-5 md:p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <Icon name="chip" className="w-4 h-4 text-[var(--elec)]" />
+              <span className="font-display text-sm font-bold tracking-[0.2em] text-white">DIMENSION BREAKDOWN</span>
+            </div>
+            <span className="font-mono text-[10px] tracking-[0.3em] text-white/40">WEIGHTED VECTOR</span>
+          </div>
+          <div className="space-y-5">
+            <DimensionBar label="OWNERSHIP · ACCOUNTABILITY (0.40)" value={result.dimScores.accountability}    delay={200} />
+            <DimensionBar label="ACTION ORIENTATION (0.35)"          value={result.dimScores.actionOrientation} delay={400} />
+            <DimensionBar label="PERSEVERANCE (0.25)"                value={result.dimScores.perseverance}      delay={600} />
+          </div>
+        </div>
+
+        <div className="glass-strong p-5 md:p-6 flex flex-col">
+          <div className="flex items-center gap-2 mb-4">
+            <Icon name="target" className="w-4 h-4 text-[var(--purple)]" />
+            <span className="font-display text-sm font-bold tracking-[0.2em] text-white">PROFICIENCY MAP</span>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <RadarChart dimScores={result.dimScores} />
+          </div>
+        </div>
+      </div>
+
+      {/* INSIGHTS */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Icon name="spark" className="w-4 h-4 text-[var(--green)]" />
+            <span className="font-display text-sm font-bold tracking-[0.2em] text-white">INSIGHTS</span>
+          </div>
+          <span className="font-mono text-[10px] tracking-[0.3em] text-white/40">GENERATED</span>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <InsightCard
+            icon="bolt" tone="green" delay={100}
+            title="STRENGTH SIGNAL"
+            body={`Highest-scoring dimension: ${DIMENSION_LABEL[result.strongest]}. Leverage this as the foundation for stretch responsibilities.`}
+          />
+          <InsightCard
+            icon="target" tone="warn" delay={200}
+            title="GROWTH EDGE"
+            body={`Focus area: ${DIMENSION_LABEL[result.weakest]}. ${DEV_TIP[result.weakest]}`}
+          />
+          <InsightCard
+            icon="trophy" tone="elec" delay={300}
+            title="CURRENT TIER"
+            body={`Operating as "${m.title}". ${result.level < 4 ? "Sustained performance at L" + (result.level+1) + " behaviors unlocks the next tier." : "Top-tier — ready for cross-functional ownership and mentorship scope."}`}
+          />
+          <InsightCard
+            icon="pulse" tone="purple" delay={400}
+            title="NEXT ACTION"
+            body="Pair this report with a live 1:1 debrief. Revisit the Phase 02 rank-order and Phase 03 attribution answers together to surface intent vs. instinct."
+          />
+        </div>
+      </div>
+
+      {/* CTAs */}
+      <div className="flex flex-wrap gap-3 justify-center">
+        <button onClick={onRestart} className="btn-primary px-7 py-3 font-display text-sm flex items-center gap-2">
+          <Icon name="restart" className="w-4 h-4" />
+          RUN AGAIN
+        </button>
+        <button onClick={() => window.print()} className="btn-ghost px-7 py-3 font-display text-sm flex items-center gap-2">
+          <Icon name="download" className="w-4 h-4" />
+          EXPORT REPORT
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* Radar (SVG triangle) */
+function RadarChart({ dimScores }) {
+  const size = 200, cx = size/2, cy = size/2, R = 72;
+  const dims = [
+    { key: "accountability",    label: "OWN",  angle: -Math.PI/2 },
+    { key: "actionOrientation", label: "ACT",  angle: -Math.PI/2 + (2*Math.PI/3) },
+    { key: "perseverance",      label: "GRIT", angle: -Math.PI/2 + (4*Math.PI/3) }
+  ];
+  const point = (r, a) => [cx + Math.cos(a)*r, cy + Math.sin(a)*r];
+  const poly = dims.map(d => point((dimScores[d.key]/4)*R, d.angle));
+  const polyStr = poly.map(p => p.join(",")).join(" ");
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[230px]">
+      <defs>
+        <radialGradient id="radarFill" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#4d9fff77" />
+          <stop offset="100%" stopColor="#b388ff22" />
+        </radialGradient>
+      </defs>
+      {[1,2,3,4].map(l => (
+        <polygon
+          key={l}
+          points={dims.map(d => point((l/4)*R, d.angle).join(",")).join(" ")}
+          fill="none" stroke="rgba(255,255,255,0.08)"
+          strokeDasharray={l < 4 ? "3 3" : ""}
+        />
+      ))}
+      {dims.map((d, i) => {
+        const [x, y] = point(R, d.angle);
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(255,255,255,0.08)" />;
+      })}
+      <polygon
+        points={polyStr} fill="url(#radarFill)" stroke="#4d9fff" strokeWidth="1.6"
+        style={{ filter: "drop-shadow(0 0 8px #4d9fffaa)" }}
+      />
+      {dims.map((d, i) => {
+        const [px, py] = point((dimScores[d.key]/4)*R, d.angle);
+        return <circle key={i} cx={px} cy={py} r="4" fill="#4d9fff" style={{ filter: "drop-shadow(0 0 6px #4d9fff)" }} />;
+      })}
+      {dims.map((d, i) => {
+        const [lx, ly] = point(R + 20, d.angle);
+        return (
+          <text key={i} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
+                fill="#b388ff" fontSize="10" fontFamily="Orbitron" letterSpacing="3"
+                style={{ textShadow: "0 0 8px #b388ff" }}>
+            {d.label}
+          </text>
+        );
+      })}
+    </svg>
+  );
+}
+
+/* ======================================================================
+   ROOT
+====================================================================== */
+
+function CatalystProtocol() {
+  const [view, setView] = useState("intro");
+  const [loadingMessages, setLoadingMessages] = useState([]);
+  const [candidateName, setCandidateName] = useState("");
+
+  const [phase1Answers, setPhase1Answers] = useState([]);
+  const [phase2Answers, setPhase2Answers] = useState([]);
+  const [phase3Answers, setPhase3Answers] = useState([]);
+
+  const [phase1Index, setPhase1Index] = useState(0);
+  const [phase2Index, setPhase2Index] = useState(0);
+  const [phase3Index, setPhase3Index] = useState(0);
+
+  const [phase1Picked, setPhase1Picked] = useState(null);
+  const [phase3Picked, setPhase3Picked] = useState(null);
+
+  const [phase2Order, setPhase2Order] = useState(null);
+  const orderRef = useRef(null);
+  useEffect(() => { orderRef.current = phase2Order; }, [phase2Order]);
+
+  const [timeLeft, setTimeLeft] = useState(PHASE1_TIMER);
+  const [logging, setLogging] = useState(false);
+  const loggingRef = useRef(false);
+  useEffect(() => { loggingRef.current = logging; }, [logging]);
+
+  const [toast, setToast] = useState(null);
+  const toastId = useRef(0);
+  const showToast = (message, tone = "elec") => {
+    toastId.current += 1;
+    const id = toastId.current;
+    setToast({ id, message, tone });
+    setTimeout(() => setToast(t => (t && t.id === id ? null : t)), 2200);
+  };
+
+  const transitionTo = useCallback((next, messages) => {
+    setLoadingMessages(messages);
+    setView("loading");
+    setTimeout(() => setView(next), TRANSITION_MS);
+  }, []);
+
+  /* PHASE 1 */
+  const submitPhase1 = useCallback((option, auto = false) => {
+    if (loggingRef.current) return;
+    const scenario = phase1Scenarios[phase1Index];
+    setPhase1Picked(option);
+    setPhase1Answers(prev => [...prev, {
+      id: scenario.id, dimension: scenario.dimension, level: option.level, auto
+    }]);
+    setLogging(true);
+    showToast(auto ? "TIMEOUT · AUTO-LOGGED" : "ACTION LOGGED", auto ? "purple" : "green");
+    setTimeout(() => {
+      setLogging(false); setPhase1Picked(null);
+      if (phase1Index + 1 < phase1Scenarios.length) setPhase1Index(phase1Index + 1);
+      else transitionTo("phase2", ["SIGNATURE CAPTURED", "INITIALIZING RANK MODULE", "MOUNTING PRIORITY MAP", "HANDOVER"]);
+    }, LOG_MS);
+  }, [phase1Index, transitionTo]);
+
+  useEffect(() => {
+    if (view !== "phase1" || logging) return;
+    const start = Date.now(); const duration = PHASE1_TIMER * 1000;
+    setTimeLeft(PHASE1_TIMER);
+    let cancelled = false, fired = false;
+    const tick = () => {
+      if (cancelled) return;
+      const remaining = Math.max(0, (duration - (Date.now() - start)) / 1000);
+      setTimeLeft(remaining);
+      if (remaining <= 0 && !fired) {
+        fired = true;
+        const s = phase1Scenarios[phase1Index];
+        const lowest = [...s.options].sort((a,b) => a.level - b.level)[0];
+        submitPhase1(lowest, true);
+      } else if (remaining > 0) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    return () => { cancelled = true; };
+  }, [view, phase1Index, logging, submitPhase1]);
+
+  /* PHASE 2 */
+  const submitPhase2 = useCallback((order, auto = false) => {
+    if (loggingRef.current) return;
+    const scenario = phase2Scenarios[phase2Index];
+    const ordered = order.map(i => scenario.options[i]);
+    setPhase2Answers(prev => [...prev, {
+      id: scenario.id, dimension: scenario.dimension, rankings: ordered, auto
+    }]);
+    setLogging(true);
+    showToast(auto ? "TIMEOUT · ORDER LOCKED" : "PRIORITY CONFIRMED", auto ? "purple" : "green");
+    setTimeout(() => {
+      setLogging(false); setPhase2Order(null);
+      if (phase2Index + 1 < phase2Scenarios.length) setPhase2Index(phase2Index + 1);
+      else transitionTo("phase3", ["PRIORITY LOCKED", "ANALYZING BEHAVIORAL PATTERNS", "OPENING REFLECTION GATE", "HANDOVER"]);
+    }, LOG_MS);
+  }, [phase2Index, transitionTo]);
+
+  useEffect(() => {
+    if (view !== "phase2" || logging) return;
+    const start = Date.now(); const duration = PHASE2_TIMER * 1000;
+    setTimeLeft(PHASE2_TIMER);
+    let cancelled = false, fired = false;
+    const tick = () => {
+      if (cancelled) return;
+      const remaining = Math.max(0, (duration - (Date.now() - start)) / 1000);
+      setTimeLeft(remaining);
+      if (remaining <= 0 && !fired) {
+        fired = true;
+        const scenario = phase2Scenarios[phase2Index];
+        const order = orderRef.current || scenario.options.map((_, i) => i);
+        submitPhase2(order, true);
+      } else if (remaining > 0) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    return () => { cancelled = true; };
+  }, [view, phase2Index, logging, submitPhase2]);
+
+  /* PHASE 3 */
+  const submitPhase3 = useCallback((option) => {
+    if (loggingRef.current) return;
+    const q = phase3Questions[phase3Index];
+    setPhase3Picked(option);
+    setPhase3Answers(prev => [...prev, { id: q.id, dimension: q.dimension, level: option.level }]);
+    setLogging(true);
+    showToast("MOTIVE LOGGED", "purple");
+    setTimeout(() => {
+      setLogging(false); setPhase3Picked(null);
+      if (phase3Index + 1 < phase3Questions.length) setPhase3Index(phase3Index + 1);
+      else transitionTo("results", ["COMPILING BEHAVIORAL VECTOR", "APPLYING WEIGHT MATRIX", "GENERATING REPORT", "RENDERING DASHBOARD"]);
+    }, LOG_MS);
+  }, [phase3Index, transitionTo]);
+
+  /* RESULTS */
+  const result = useMemo(() => {
+    if (view !== "results") return null;
+    return computeResults(phase1Answers, phase2Answers, phase3Answers);
+  }, [view, phase1Answers, phase2Answers, phase3Answers]);
+
+  const restart = () => {
+    setPhase1Answers([]); setPhase2Answers([]); setPhase3Answers([]);
+    setPhase1Index(0); setPhase2Index(0); setPhase3Index(0);
+    setPhase2Order(null); setPhase1Picked(null); setPhase3Picked(null);
+    setCandidateName("");
+    setView("intro");
+  };
+
+  const body = (() => {
+    if (view === "intro") {
+      return <LandingView onStart={(n) => {
+        setCandidateName(n);
+        transitionTo("phase1", ["IDENTITY VERIFIED", "INITIALIZING SIMULATION", "MOUNTING SJT MODULE", "HANDOVER"]);
+      }} />;
+    }
+    if (view === "loading") return <LoadingView messages={loadingMessages} />;
+    if (view === "phase1") {
+      return <SimulationChatScreen
+        scenarioIdx={phase1Index}
+        total={phase1Scenarios.length}
+        scenario={phase1Scenarios[phase1Index]}
+        timeLeft={timeLeft}
+        onSelect={submitPhase1}
+        logging={logging}
+        lastPicked={phase1Picked}
+        phaseNum={1}
+      />;
+    }
+    if (view === "phase2") {
+      return <RankScreen
+        scenarioIdx={phase2Index}
+        total={phase2Scenarios.length}
+        scenario={phase2Scenarios[phase2Index]}
+        timeLeft={timeLeft}
+        onSubmit={(order) => submitPhase2(order, false)}
+        onOrderChange={(o) => setPhase2Order(o)}
+        initialOrder={null}
+        logging={logging}
+        phaseNum={2}
+      />;
+    }
+    if (view === "phase3") {
+      return <ReflectionScreen
+        scenarioIdx={phase3Index}
+        total={phase3Questions.length}
+        question={phase3Questions[phase3Index]}
+        onSelect={submitPhase3}
+        logging={logging}
+        lastPicked={phase3Picked}
+        phaseNum={3}
+      />;
+    }
+    if (view === "results" && result) {
+      return <ResultsDashboard name={candidateName} result={result} onRestart={restart} />;
+    }
+    return null;
+  })();
+
+  return (
+    <div className="relative min-h-screen">
+      {/* Background layers */}
+      <AmbientOrbs />
+      <ParticleField />
+      <div className="fixed inset-0 grid-bg pointer-events-none" style={{ opacity: 0.5, zIndex: 0 }} />
+      <div className="fixed inset-0 scanlines pointer-events-none" style={{ zIndex: 0 }} />
+      <div className="fixed inset-0 pointer-events-none" style={{
+        zIndex: 0,
+        background: "radial-gradient(ellipse at top, rgba(77,159,255,0.12), transparent 60%), radial-gradient(ellipse at bottom, rgba(179,136,255,0.08), transparent 60%)"
+      }} />
+
+      <div className="relative px-4 md:px-8 py-6 md:py-10" style={{ zIndex: 10 }}>
+        {body}
+        <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-white/5 text-[10px] font-mono tracking-[0.3em] text-white/30 flex justify-between items-center">
+          <span>CATALYST_PROTOCOL · v0.3 · MISSION-CONTROL</span>
+          <span className="hidden md:inline flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse inline-block" />
+            SECURE · ENCRYPTED
+          </span>
+        </div>
+      </div>
+
+      {toast && <Toast key={toast.id} id={toast.id} message={toast.message} tone={toast.tone} />}
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<CatalystProtocol />);
+</script>
+</body>
+</html>

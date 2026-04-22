@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Catalyst Protocol // Band 1 Behavioral Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --neon-green: #00ff88;
+    --neon-cyan:  #00e5ff;
+    --neon-amber: #ffb020;
+    --neon-red:   #ff4d6d;
+    --neon-violet:#b388ff;
+    --bg: #05060b;
+    --bg-2: #0a0d18;
+  }
+  * { box-sizing: border-box; }
+  html, body, #root { background: var(--bg); min-height: 100%; overflow-x: hidden; }
+  body {
+    margin: 0;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #e5e7eb;
+    -webkit-font-smoothing: antialiased;
+  }
+  .font-display { font-family: 'Space Grotesk', 'JetBrains Mono', sans-serif; letter-spacing: -0.01em; }
+
+  /* Glow utilities */
+  .glow-green { text-shadow: 0 0 8px #00ff8888, 0 0 20px #00ff8855; }
+  .glow-cyan  { text-shadow: 0 0 8px #00e5ff99, 0 0 20px #00e5ff55; }
+  .glow-amber { text-shadow: 0 0 8px #ffb02099, 0 0 20px #ffb02055; }
+  .glow-red   { text-shadow: 0 0 8px #ff4d6d99, 0 0 20px #ff4d6d55; }
+  .glow-violet{ text-shadow: 0 0 8px #b388ffaa, 0 0 20px #b388ff55; }
+  .shadow-glow-green { box-shadow: 0 0 0 1px #00ff8844, 0 0 40px -8px #00ff8877; }
+  .shadow-glow-cyan  { box-shadow: 0 0 0 1px #00e5ff44, 0 0 40px -8px #00e5ff77; }
+
+  /* Blinking cursor */
+  .cursor::after { content: "▮"; margin-left: 2px; color: #00ff88; animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Entrance */
+  .fade-up { animation: fadeup 0.5s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes fadeup { from { opacity: 0; transform: translateY(14px) scale(0.985); } to { opacity: 1; transform: none; } }
+  .fade-in { animation: fadein 0.35s ease both; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  .slide-right { animation: slideright 0.45s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes slideright { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: none; } }
+
+  /* Glitch title */
+  .glitch { position: relative; color: var(--neon-green); }
+  .glitch::before, .glitch::after {
+    content: attr(data-text);
+    position: absolute; inset: 0;
+    pointer-events: none;
+  }
+  .glitch::before { color: #00e5ff; transform: translate(2px, 0); mix-blend-mode: screen; animation: glitchA 3.5s infinite steps(1); opacity: 0.8; }
+  .glitch::after  { color: #ff4d6d; transform: translate(-2px, 0); mix-blend-mode: screen; animation: glitchB 3.5s infinite steps(1); opacity: 0.6; }
+  @keyframes glitchA {
+    0%,94%,100% { clip-path: inset(0 0 0 0); transform: translate(0,0); }
+    95% { clip-path: inset(20% 0 60% 0); transform: translate(2px,-1px); }
+    96% { clip-path: inset(40% 0 40% 0); transform: translate(-2px,1px); }
+    97% { clip-path: inset(70% 0 10% 0); transform: translate(2px,2px); }
+    98% { clip-path: inset(10% 0 70% 0); transform: translate(-1px,-1px); }
+  }
+  @keyframes glitchB {
+    0%,93%,100% { clip-path: inset(0 0 0 0); transform: translate(0,0); }
+    94% { clip-path: inset(50% 0 30% 0); transform: translate(-2px,1px); }
+    95% { clip-path: inset(10% 0 70% 0); transform: translate(2px,-2px); }
+    96% { clip-path: inset(70% 0 10% 0); transform: translate(-2px,2px); }
+    97% { clip-path: inset(30% 0 50% 0); transform: translate(1px,1px); }
+  }
+
+  /* Scan + grid layers */
+  .scanlines {
+    background-image: repeating-linear-gradient(
+      to bottom, rgba(0,255,136,0.03) 0 1px, transparent 1px 3px);
+    pointer-events: none;
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(0,229,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: -1px -1px;
+  }
+
+  /* Shimmer sweep for buttons */
+  .shimmer { position: relative; overflow: hidden; }
+  .shimmer::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: shimmer 2.8s infinite;
+    pointer-events: none;
+  }
+  @keyframes shimmer { 0% { transform: translateX(-100%);} 60%,100% { transform: translateX(110%);} }
+
+  /* Orb glow */
+  .orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    opacity: 0.35;
+    pointer-events: none;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    0%   { transform: translate(0,0) scale(1); }
+    100% { transform: translate(40px,-30px) scale(1.15); }
+  }
+
+  /* Card tilt */
+  .tilt { transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s, border-color 0.25s, background-color 0.25s; transform-style: preserve-3d; }
+  .tilt:hover { transform: translateY(-3px) scale(1.005); }
+  .tilt-active { transform: translateY(-4px); }
+
+  /* Ripple */
+  .ripple { position: relative; overflow: hidden; }
+  .ripple-el {
+    position: absolute; border-radius: 9999px; pointer-events: none;
+    background: radial-gradient(circle, rgba(0,255,136,0.55) 0%, rgba(0,255,136,0) 70%);
+    transform: translate(-50%, -50%) scale(0); animation: ripple 0.8s ease-out forwards;
+  }
+  @keyframes ripple { to { transform: translate(-50%, -50%) scale(30); opacity: 0; } }
+
+  /* Pulse ring */
+  .pulse-ring { position: relative; }
+  .pulse-ring::before {
+    content: ""; position: absolute; inset: -4px; border-radius: 9999px;
+    border: 2px solid #00ff88; animation: pulsering 1.6s cubic-bezier(.2,.8,.2,1) infinite; opacity: 0;
+  }
+  @keyframes pulsering {
+    0% { transform: scale(0.7); opacity: 0.9; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+
+  /* Timer bar shimmer */
+  .bar-stripe {
+    background-image: linear-gradient(110deg, rgba(0,0,0,0) 25%, rgba(255,255,255,0.25) 50%, rgba(0,0,0,0) 75%);
+    background-size: 200% 100%;
+    animation: barstripe 1.4s linear infinite;
+  }
+  @keyframes barstripe { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+
+  /* Danger shake */
+  .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+  @keyframes shake {
+    10%,90% { transform: translateX(-1px); }
+    20%,80% { transform: translateX(2px); }
+    30%,50%,70% { transform: translateX(-4px); }
+    40%,60% { transform: translateX(4px); }
+  }
+
+  /* Stepper dot */
+  .dot-glow { box-shadow: 0 0 0 4px rgba(0,255,136,0.12), 0 0 18px #00ff88aa; }
+
+  /* Scan transition overlay */
+  .scan-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 50;
+    background: linear-gradient(180deg, rgba(0,255,136,0) 0%, rgba(0,255,136,0.14) 50%, rgba(0,255,136,0) 100%);
+    animation: scanmove 1.5s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  @keyframes scanmove { 0% { transform: translateY(-100%);} 100% { transform: translateY(100%);} }
+
+  /* Chip */
+  .chip {
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    padding: 3px 8px;
+    border: 1px solid #00e5ff55;
+    color: #00e5ff;
+    border-radius: 2px;
+    background: rgba(0,229,255,0.06);
+  }
+
+  /* Count-up smooth */
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  /* Custom scroll if needed */
+  ::selection { background: #00ff8844; color: #fff; }
+
+  button { cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 2px solid #00e5ff; outline-offset: 3px; }
+
+  /* Rotating conic */
+  .conic {
+    background: conic-gradient(from 0deg, #00ff88, #00e5ff, #b388ff, #ff4d6d, #00ff88);
+    animation: spin 6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Slight float for orbs layer */
+  .bg-noise::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 3px 3px;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+</style>
+</head>
+<body class="bg-gray-950">
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback, useLayoutEffect } = React;
+
+/* ---------- DATA ---------- */
+
+const phase1Scenarios = [
+  {
+    id: "p1s1", dimension: "accountability",
+    bot: "🚨 Build alert — your latest commit may have broken smoke tests. QA wants to rollback immediately. What do you do?",
+    options: [
+      { text: "Tell QA to rollback. I'll review logs after the environment stabilizes.", level: 2 },
+      { text: "Hold the rollback. I'm checking my local env now — update in 5 mins.", level: 3 },
+      { text: "I'll reproduce it locally, push a hotfix, and run targeted tests before deciding on rollback.", level: 4 }
+    ]
+  },
+  {
+    id: "p1s2", dimension: "actionOrientation",
+    bot: "API docs for your next ticket won't be ready for 4 hours. Team Lead says you can wait or start early.",
+    options: [
+      { text: "I'll wait — coding without docs wastes effort.", level: 1 },
+      { text: "I'll set up boilerplate and mock interfaces so I'm ready when docs land.", level: 3 },
+      { text: "I'll scaffold the module, identify critical unknowns, and draft clarification questions to speed things up.", level: 4 }
+    ]
+  },
+  {
+    id: "p1s3", dimension: "perseverance",
+    bot: "You've been debugging a critical logic error for 3 hours. Sprint deadline in 2 hours.",
+    options: [
+      { text: "Escalate to senior dev immediately to avoid missing sprint.", level: 2 },
+      { text: "Take a 5-min break, then try a completely different debugging approach.", level: 3 },
+      { text: "Fix it, then add a Wiki note so the team avoids this specific error in future.", level: 4 }
+    ]
+  }
+];
+
+const phase2Scenarios = [
+  {
+    id: "p2s1", dimension: "accountability",
+    situation: "You spot a minor edge-case flaw in your code after it's already merged to Staging. Rank these actions 1st to 3rd:",
+    options: [
+      { text: "Wait for QA to flag it — if they miss it, it's probably not critical.", level: 1 },
+      { text: "Create a follow-up ticket and inform the lead; fix it next sub-sprint.", level: 2 },
+      { text: "Fix it now and push a patch immediately — keep Staging pristine.", level: 4 }
+    ]
+  },
+  {
+    id: "p2s2", dimension: "actionOrientation",
+    situation: "Critical feature needed urgently. Rank your approach 1st to 3rd:",
+    options: [
+      { text: "Defer until quality can be guaranteed, even if deadline slips.", level: 2 },
+      { text: "Ship a minimal viable version with known risks; plan a follow-up patch.", level: 3 },
+      { text: "Pause non-critical work, reallocate focus, and deliver with full tests.", level: 4 }
+    ]
+  }
+];
+
+const phase3Questions = [
+  {
+    id: "p3q1", dimension: "accountability",
+    question: "Why would you fix a self-discovered bug immediately rather than waiting for QA?",
+    options: [
+      { text: "I own the outcome. An open bug in Staging is my responsibility.", level: 4 },
+      { text: "Team process requires it — open bugs on Staging get flagged.", level: 2 }
+    ]
+  },
+  {
+    id: "p3q2", dimension: "actionOrientation",
+    question: "Why do you start boilerplate work while waiting for missing docs?",
+    options: [
+      { text: "I don't want to waste sprint time — I'll adjust details when specs arrive.", level: 3 },
+      { text: "I want the lead to see I'm proactive and not blocked.", level: 2 }
+    ]
+  },
+  {
+    id: "p3q3", dimension: "perseverance",
+    question: "What drives you to stay with a bug past 2 hours instead of escalating?",
+    options: [
+      { text: "I feel personally responsible for the ticket — it's not done until it's done.", level: 4 },
+      { text: "I don't want to look like I give up easily in front of the team.", level: 2 }
+    ]
+  }
+];
+
+/* ---------- CONSTANTS ---------- */
+
+const PHASE1_TIMER = 12;
+const PHASE2_TIMER = 20;
+const TRANSITION_MS = 1500;
+const LOG_MS = 850;
+
+const DIMENSION_LABEL = {
+  accountability: "Ownership / Accountability",
+  actionOrientation: "Action Orientation",
+  perseverance: "Perseverance"
+};
+
+const PERSONA = {
+  1: { label: "The Passive",     tag: "L1", accent: "#ff4d6d" },
+  2: { label: "The Apprentice",  tag: "L2", accent: "#ffb020" },
+  3: { label: "The Finisher",    tag: "L3", accent: "#00e5ff" },
+  4: { label: "The Accelerator", tag: "L4", accent: "#00ff88" }
+};
+
+const LEVEL_SUMMARY = {
+  1: [
+    "Hesitates under pressure; defers decisions and minimizes personal exposure to risk.",
+    "Requires foundational development on initiative, closure, and personal ownership of outcomes."
+  ],
+  2: [
+    "Emerging awareness of accountability; still leans on team structure to resolve ambiguity.",
+    "Developing but not yet consistently proactive — benefits from deliberate coaching on ownership."
+  ],
+  3: [
+    "Completes what they start; takes reasonable initiative and drives tickets to done.",
+    "Next growth edge: proactively anticipate blockers and convert idle time into momentum."
+  ],
+  4: [
+    "Drives outcomes end-to-end; removes ambiguity, owns edge cases, and accelerates the team.",
+    "Ready for stretch scope — mentorship responsibilities and cross-functional ownership fit well."
+  ]
+};
+
+const DEV_TIP = {
+  accountability: "Develop ownership: treat every self-discovered issue as yours to resolve before handoff. Close the loop with stakeholders proactively rather than waiting for QA to surface it.",
+  actionOrientation: "Develop bias-for-action: when blocked on inputs, scaffold what you can, isolate unknowns, and draft clarification questions. Never let sprint time go idle.",
+  perseverance: "Develop grit: before escalating a stuck bug, switch approach (binary-search, new hypothesis, fresh logs). Document recovered defects so the team compounds your persistence."
+};
+
+/* ---------- SCORING ---------- */
+
+function computeResults(p1, p2, p3) {
+  const p2Scored = p2.map(a => ({
+    id: a.id, dimension: a.dimension, level: a.rankings[0].level, rankings: a.rankings
+  }));
+  const all = [...p1, ...p2Scored, ...p3];
+  const byDim = {};
+  for (const a of all) (byDim[a.dimension] ||= []).push(a.level);
+  const avg = arr => arr.reduce((s,n)=>s+n,0)/arr.length;
+  const dimScores = {
+    accountability: byDim.accountability ? avg(byDim.accountability) : 0,
+    actionOrientation: byDim.actionOrientation ? avg(byDim.actionOrientation) : 0,
+    perseverance: byDim.perseverance ? avg(byDim.perseverance) : 0
+  };
+  const finalScore =
+    dimScores.accountability * 0.40 +
+    dimScores.actionOrientation * 0.35 +
+    dimScores.perseverance * 0.25;
+  let level;
+  if (finalScore >= 3.25) level = 4;
+  else if (finalScore >= 2.50) level = 3;
+  else if (finalScore >= 1.75) level = 2;
+  else level = 1;
+  let consistencyFlag = false;
+  for (const p2a of p2) {
+    const last = p2a.rankings[p2a.rankings.length - 1];
+    if (last.level === 4) {
+      const p1m = p1.find(x => x.dimension === p2a.dimension);
+      if (p1m && p1m.level >= 3) { consistencyFlag = true; break; }
+    }
+  }
+  const weakest = Object.entries(dimScores)
+    .filter(([,v]) => v > 0)
+    .sort((a,b) => a[1] - b[1])[0][0];
+  return { dimScores, finalScore, level, consistencyFlag, weakest };
+}
+
+/* ---------- HOOKS ---------- */
+
+function useTypewriter(text, speed = 22, start = true) {
+  const [out, setOut] = useState("");
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    if (!start) return;
+    setOut(""); setDone(false);
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setOut(text.slice(0, i));
+      if (i >= text.length) { clearInterval(id); setDone(true); }
+    }, speed);
+    return () => clearInterval(id);
+  }, [text, speed, start]);
+  return { text: out, done };
+}
+
+function useCountUp(target, duration = 1200, start = true) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    const t0 = performance.now();
+    let raf;
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setV(target * eased);
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration, start]);
+  return v;
+}
+
+/* ---------- ANIMATED BACKGROUND (Matrix Rain) ---------- */
+
+function MatrixRain() {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    let w = c.width = window.innerWidth;
+    let h = c.height = window.innerHeight;
+    const fontSize = 14;
+    let columns = Math.floor(w / fontSize);
+    let drops = Array(columns).fill(0).map(() => Math.random() * -50);
+    const chars = "アカサタナハマヤラワ0123456789{}[]<>/=+*-_$".split("");
+    let raf;
+    const onResize = () => {
+      w = c.width = window.innerWidth;
+      h = c.height = window.innerHeight;
+      columns = Math.floor(w / fontSize);
+      drops = Array(columns).fill(0).map(() => Math.random() * -50);
+    };
+    window.addEventListener("resize", onResize);
+    const draw = () => {
+      ctx.fillStyle = "rgba(5,6,11,0.09)";
+      ctx.fillRect(0, 0, w, h);
+      ctx.font = `${fontSize}px 'JetBrains Mono', monospace`;
+      for (let i = 0; i < columns; i++) {
+        const ch = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        const head = Math.random() > 0.975;
+        ctx.fillStyle = head ? "#b8ffe0" : "rgba(0,255,136,0.55)";
+        ctx.fillText(ch, x, y);
+        if (y > h && Math.random() > 0.975) drops[i] = 0;
+        drops[i] += 0.6 + Math.random() * 0.3;
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); };
+  }, []);
+  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full" style={{ opacity: 0.18, pointerEvents: "none" }} />;
+}
+
+/* ---------- CONFETTI (SVG sparkles) ---------- */
+
+function ConfettiBurst({ show }) {
+  const parts = useMemo(() => {
+    if (!show) return [];
+    return Array.from({ length: 80 }, (_, i) => ({
+      id: i,
+      angle: Math.random() * Math.PI * 2,
+      dist: 140 + Math.random() * 360,
+      delay: Math.random() * 0.2,
+      duration: 1.2 + Math.random() * 1.3,
+      size: 4 + Math.random() * 6,
+      color: ["#00ff88", "#00e5ff", "#b388ff", "#ffb020"][Math.floor(Math.random() * 4)]
+    }));
+  }, [show]);
+  if (!show) return null;
+  return (
+    <div className="pointer-events-none fixed inset-0 flex items-start justify-center z-40" aria-hidden>
+      <style>{`
+        @keyframes confetti-fly {
+          0% { transform: translate(0,0) rotate(0deg); opacity: 1; }
+          100% { transform: translate(var(--tx), var(--ty)) rotate(720deg); opacity: 0; }
+        }
+      `}</style>
+      <div className="relative top-[18vh]">
+        {parts.map(p => {
+          const tx = Math.cos(p.angle) * p.dist;
+          const ty = Math.sin(p.angle) * p.dist + 100;
+          return (
+            <span
+              key={p.id}
+              style={{
+                position: "absolute",
+                width: p.size, height: p.size,
+                background: p.color,
+                borderRadius: Math.random() > 0.5 ? "2px" : "9999px",
+                boxShadow: `0 0 12px ${p.color}`,
+                animation: `confetti-fly ${p.duration}s cubic-bezier(.1,.7,.2,1) ${p.delay}s forwards`,
+                ["--tx"]: `${tx}px`,
+                ["--ty"]: `${ty}px`
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- UI PIECES ---------- */
+
+function SysLine({ children, tone = "green", delay = 0 }) {
+  const cls = tone === "cyan"  ? "text-[var(--neon-cyan)] glow-cyan"
+           :  tone === "amber" ? "text-[var(--neon-amber)] glow-amber"
+           :  tone === "violet"? "text-[var(--neon-violet)] glow-violet"
+           :                     "text-[var(--neon-green)] glow-green";
+  return (
+    <div className={"text-xs md:text-sm fade-up " + cls} style={{ animationDelay: `${delay}ms` }}>
+      <span className="opacity-70">&gt; </span>{children}
+    </div>
+  );
+}
+
+function PhaseStepper({ active, completed }) {
+  const steps = [
+    { key: "intro",  label: "INIT" },
+    { key: "phase1", label: "SJT" },
+    { key: "phase2", label: "RANK" },
+    { key: "phase3", label: "WHY"  },
+    { key: "results",label: "REPORT" }
+  ];
+  return (
+    <div className="flex items-center gap-1 md:gap-2 text-[10px] tracking-[0.25em] select-none">
+      {steps.map((s, i) => {
+        const isActive = s.key === active;
+        const isDone = completed.includes(s.key);
+        return (
+          <React.Fragment key={s.key}>
+            <div className="flex items-center gap-2">
+              <div className={
+                "w-2.5 h-2.5 rounded-full transition-all duration-300 " +
+                (isActive ? "bg-[var(--neon-green)] dot-glow" :
+                 isDone   ? "bg-[var(--neon-cyan)]" :
+                            "bg-gray-700")
+              } />
+              <span className={isActive ? "text-[var(--neon-green)]" : isDone ? "text-[var(--neon-cyan)]" : "text-gray-600"}>
+                0{i+1}·{s.label}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div className={"w-4 h-px " + (isDone ? "bg-[var(--neon-cyan)]" : "bg-gray-800")} />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+function TimerBar({ value, max }) {
+  const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  const urgent = value <= 3;
+  const warn   = value <= max * 0.4;
+  const grad =
+    urgent ? "linear-gradient(90deg,#ff4d6d 0%,#ffb020 100%)"
+   : warn   ? "linear-gradient(90deg,#ffb020 0%,#00e5ff 100%)"
+   :          "linear-gradient(90deg,#00ff88 0%,#00e5ff 100%)";
+  return (
+    <div className={"w-full " + (urgent ? "shake" : "")}>
+      <div className="flex justify-between text-[10px] md:text-xs uppercase tracking-widest mb-1">
+        <span className={urgent ? "text-[var(--neon-red)] glow-red" : "text-[var(--neon-cyan)]"}>
+          {urgent ? "// time_critical" : "// timer_window"}
+        </span>
+        <span className={
+          "tabular font-semibold " +
+          (urgent ? "text-[var(--neon-red)] glow-red" : "text-[var(--neon-green)] glow-green")
+        }>
+          {value.toFixed(1)}s
+        </span>
+      </div>
+      <div className="relative h-2 w-full bg-gray-900/80 border border-gray-800 rounded-sm overflow-hidden">
+        <div
+          className="h-full transition-[width] duration-75 linear relative"
+          style={{ width: pct + "%", background: grad, boxShadow: `0 0 14px ${urgent ? "#ff4d6d99" : "#00ff8888"}` }}
+        >
+          <div className="absolute inset-0 bar-stripe opacity-60" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BrandHeader({ phase, progress, active, completed }) {
+  return (
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-gray-800 pb-3 mb-6">
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <div className="w-3 h-3 rounded-full bg-[var(--neon-green)] shadow-[0_0_12px_#00ff88]" />
+          <span className="absolute inset-0 rounded-full pulse-ring" />
+        </div>
+        <div className="font-display text-sm md:text-base tracking-[0.28em] text-[var(--neon-cyan)] glow-cyan font-semibold">
+          CATALYST://PROTOCOL
+        </div>
+        <span className="chip hidden md:inline-block">v0.2.0</span>
+      </div>
+      <div className="flex items-center gap-4">
+        <PhaseStepper active={active} completed={completed} />
+        <div className="hidden md:block text-xs tracking-widest text-gray-500">
+          <span className="text-[var(--neon-green)]">{phase}</span>
+          {progress && <span className="ml-2 text-gray-500">· {progress}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Tilt Card ---------- */
+
+function TiltCard({ children, className = "", disabled, onClick, active }) {
+  const ref = useRef(null);
+  const onMove = (e) => {
+    const el = ref.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = `perspective(800px) rotateX(${-y * 3}deg) rotateY(${x * 4}deg) translateY(-3px)`;
+  };
+  const onLeave = () => {
+    const el = ref.current; if (!el) return;
+    el.style.transform = "";
+  };
+  const handleClick = (e) => {
+    if (disabled) return;
+    const el = ref.current; if (el) {
+      const r = el.getBoundingClientRect();
+      const rx = e.clientX - r.left;
+      const ry = e.clientY - r.top;
+      const rip = document.createElement("span");
+      rip.className = "ripple-el";
+      rip.style.left = rx + "px";
+      rip.style.top = ry + "px";
+      rip.style.width = "10px"; rip.style.height = "10px";
+      el.appendChild(rip);
+      setTimeout(() => rip.remove(), 800);
+    }
+    onClick && onClick(e);
+  };
+  return (
+    <button
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      onClick={handleClick}
+      disabled={disabled}
+      className={"tilt ripple text-left w-full " + className + (active ? " tilt-active" : "")}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ---------- VIEWS ---------- */
+
+function IntroView({ onStart }) {
+  const [name, setName] = useState("");
+  const canStart = name.trim().length >= 2;
+  const { text: tagline } = useTypewriter("// precision diagnostic for Drive · Ownership · Grit", 28);
+  return (
+    <div className="fade-up max-w-4xl mx-auto">
+      <BrandHeader phase="INIT // 0.0" active="intro" completed={[]} />
+
+      <div className="relative mb-10">
+        <div className="absolute -inset-8 -z-10 opacity-40">
+          <div className="orb bg-[var(--neon-green)]" style={{ width: 320, height: 320, top: -30, left: -40 }} />
+          <div className="orb bg-[var(--neon-cyan)]" style={{ width: 260, height: 260, top: 10, right: -20, animationDelay: "-6s" }} />
+        </div>
+        <div className="text-[var(--neon-green)] text-[11px] tracking-[0.4em] mb-3">[ SYSTEM READY ]</div>
+        <h1
+          data-text="THE CATALYST PROTOCOL"
+          className="glitch font-display text-4xl md:text-7xl font-extrabold leading-[0.95] glow-green"
+        >
+          THE CATALYST PROTOCOL
+        </h1>
+        <div className="mt-3 text-sm md:text-base text-[var(--neon-cyan)] glow-cyan tracking-wider">
+          BAND 01 · SOFTWARE ENGINEER · BEHAVIORAL ASSESSMENT
+        </div>
+        <div className="mt-1 text-xs md:text-sm text-gray-400 cursor">{tagline}</div>
+      </div>
+
+      <div className="border border-gray-800 bg-black/50 backdrop-blur-sm rounded-sm p-5 md:p-6 shadow-glow-green mb-6 relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-48 h-48 conic opacity-[0.07] rounded-full" />
+        <SysLine delay={0}>booting kernel...</SysLine>
+        <SysLine delay={160}>loading competency_model.json ✓</SysLine>
+        <SysLine delay={320}>dimensions := {`{ accountability(0.40), action_orientation(0.35), perseverance(0.25) }`}</SysLine>
+        <SysLine delay={480} tone="cyan">awaiting candidate identifier...</SysLine>
+        <div className="mt-5">
+          <label className="block text-xs uppercase tracking-widest text-gray-400 mb-2">&gt; candidate_name</label>
+          <div className="flex items-center gap-3 border border-[var(--neon-green)] bg-black/80 px-3 py-2.5 rounded-sm shadow-glow-green">
+            <span className="text-[var(--neon-green)]">$</span>
+            <input
+              autoFocus
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && canStart) onStart(name.trim()); }}
+              placeholder="enter callsign"
+              className="flex-1 bg-transparent outline-none text-[var(--neon-green)] placeholder-gray-600 tracking-wide"
+            />
+            <span className="text-xs text-gray-500 hidden md:inline">↵ ENTER</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-3 mb-8 text-xs md:text-sm">
+        {[
+          { k: "PHASE_01", t: "SJT Bot Chat",  s: "3 scenarios · 12s each",  c: "var(--neon-green)" },
+          { k: "PHASE_02", t: "Rank-Order",    s: "2 scenarios · 20s each",  c: "var(--neon-cyan)"  },
+          { k: "PHASE_03", t: "Attribution",   s: "3 forced choices",        c: "var(--neon-violet)" }
+        ].map((m, i) => (
+          <div
+            key={m.k}
+            className="tilt border border-gray-800 p-4 rounded-sm bg-black/40 hover:border-transparent transition fade-up"
+            style={{ animationDelay: `${120 * i}ms`, boxShadow: `inset 0 0 0 1px transparent` }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-[11px] tracking-[0.25em]" style={{ color: m.c }}>{m.k}</div>
+              <div className="w-2 h-2 rounded-full" style={{ background: m.c, boxShadow: `0 0 8px ${m.c}` }} />
+            </div>
+            <div className="text-gray-100 mt-2 font-display">{m.t}</div>
+            <div className="text-gray-500 text-[11px] mt-1">{m.s}</div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        disabled={!canStart}
+        onClick={() => onStart(name.trim())}
+        className={
+          "shimmer w-full md:w-auto px-8 py-3.5 font-display font-bold tracking-[0.28em] text-sm rounded-sm transition " +
+          (canStart
+            ? "bg-[var(--neon-green)] text-black shadow-glow-green hover:brightness-110 hover:-translate-y-[1px]"
+            : "bg-gray-800 text-gray-500 cursor-not-allowed")
+        }
+      >
+        &gt; INITIALIZE_PROTOCOL
+      </button>
+    </div>
+  );
+}
+
+function LoadingView({ label }) {
+  const [pct, setPct] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    let raf;
+    const tick = () => {
+      const p = Math.min(100, ((Date.now() - start) / TRANSITION_MS) * 100);
+      setPct(p);
+      if (p < 100) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  const steps = ["ENCRYPT_TRANSMISSION", "VERIFY_SIGNATURE", "MOUNT_MODULE", "HANDOVER"];
+  const activeStep = Math.min(steps.length - 1, Math.floor((pct / 100) * steps.length));
+  return (
+    <div className="fade-in max-w-2xl mx-auto flex flex-col items-center justify-center py-24 relative">
+      <div className="relative w-40 h-40 mb-6">
+        <div className="absolute inset-0 rounded-full border border-gray-800" />
+        <div className="absolute inset-0 rounded-full conic opacity-90" style={{ maskImage: "radial-gradient(circle, transparent 62%, black 63%)", WebkitMaskImage: "radial-gradient(circle, transparent 62%, black 63%)" }} />
+        <div className="absolute inset-4 rounded-full bg-[var(--bg)] flex items-center justify-center border border-gray-800">
+          <span className="text-[var(--neon-green)] glow-green text-2xl font-bold tabular">{pct.toFixed(0)}%</span>
+        </div>
+      </div>
+      <div className="text-xs text-[var(--neon-cyan)] tracking-[0.4em] mb-1">// transmitting</div>
+      <div className="font-display text-xl md:text-2xl text-[var(--neon-green)] glow-green tracking-widest">
+        SYSTEM LOADING {label}
+      </div>
+      <div className="mt-6 w-full max-w-md space-y-1 text-xs">
+        {steps.map((s, i) => (
+          <div key={s} className="flex items-center gap-3">
+            <div className={
+              "w-1.5 h-1.5 rounded-full " +
+              (i < activeStep ? "bg-[var(--neon-cyan)]" :
+               i === activeStep ? "bg-[var(--neon-green)] dot-glow" :
+                                  "bg-gray-700")
+            } />
+            <span className={i <= activeStep ? "text-gray-200 tracking-widest" : "text-gray-600 tracking-widest"}>
+              {i <= activeStep ? "✓" : "·"} {s}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Phase1View({ index, total, scenario, timeLeft, onSelect, logging, lastPicked, completed }) {
+  const { text, done } = useTypewriter(scenario.bot, 18);
+  return (
+    <div className="fade-up max-w-3xl mx-auto">
+      <BrandHeader phase="PHASE_01 // SJT_BOT" progress={`scenario ${index + 1} / ${total}`} active="phase1" completed={completed} />
+      <TimerBar value={timeLeft} max={PHASE1_TIMER} />
+
+      <div className="mt-6 relative">
+        <div className="absolute -inset-2 -z-10 opacity-40">
+          <div className="orb bg-[var(--neon-cyan)]" style={{ width: 260, height: 260, top: -20, left: -30 }} />
+        </div>
+        <div className="slide-right border border-gray-800 rounded-sm bg-black/60 backdrop-blur-sm p-5 md:p-6 relative overflow-hidden">
+          <div className="flex items-start gap-3">
+            <div className="relative shrink-0">
+              <div className="w-11 h-11 rounded-sm border border-[var(--neon-cyan)] flex items-center justify-center text-[var(--neon-cyan)] glow-cyan text-xs font-bold bg-black/60">
+                A.R
+              </div>
+              <span className="pulse-ring absolute inset-0 rounded-sm" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] tracking-[0.3em] text-[var(--neon-cyan)]">ARIA // assistant_bot</span>
+                <span className="w-1.5 h-1.5 bg-[var(--neon-green)] rounded-full animate-pulse" />
+                <span className="text-[10px] text-gray-500 tracking-widest">ONLINE</span>
+              </div>
+              <div className={"mt-2 text-sm md:text-base leading-relaxed text-gray-100 " + (done ? "" : "cursor")}>
+                {text}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3">
+        {scenario.options.map((opt, i) => {
+          const isPicked = lastPicked && lastPicked.text === opt.text;
+          return (
+            <div key={i} className="fade-up" style={{ animationDelay: `${150 + i * 90}ms` }}>
+              <TiltCard
+                disabled={logging}
+                active={isPicked}
+                onClick={() => onSelect(opt)}
+                className={
+                  "border rounded-sm p-4 md:p-5 " +
+                  (isPicked
+                    ? "border-[var(--neon-green)] bg-[#001a10] shadow-glow-green"
+                    : "border-gray-800 bg-black/40 hover:border-[var(--neon-green)] hover:bg-[#001a10]/50")
+                }
+              >
+                <div className="flex items-start gap-4">
+                  <span className="text-[var(--neon-cyan)] glow-cyan text-xs mt-1 tracking-widest font-bold">
+                    [{String.fromCharCode(65 + i)}]
+                  </span>
+                  <span className="text-gray-100 text-sm md:text-[15px] leading-relaxed">
+                    {opt.text}
+                  </span>
+                </div>
+              </TiltCard>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 min-h-[28px]">
+        {logging && (
+          <div className="space-y-1">
+            <SysLine>logging response...</SysLine>
+            <SysLine tone="cyan" delay={180}>response.signature := captured ✓</SysLine>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Phase2View({ index, total, scenario, timeLeft, rankings, onClick, onSubmit, logging, completed }) {
+  const rankOf = (i) => { const p = rankings.indexOf(i); return p === -1 ? null : p + 1; };
+  const label = (n) => n === 1 ? "1ST" : n === 2 ? "2ND" : "3RD";
+  const color = (n) => n === 1 ? "var(--neon-green)" : n === 2 ? "var(--neon-cyan)" : "var(--neon-violet)";
+  const ready = rankings.length === scenario.options.length;
+
+  return (
+    <div className="fade-up max-w-3xl mx-auto">
+      <BrandHeader phase="PHASE_02 // RANK_ORDER" progress={`scenario ${index + 1} / ${total}`} active="phase2" completed={completed} />
+      <TimerBar value={timeLeft} max={PHASE2_TIMER} />
+
+      <div className="mt-6 border border-gray-800 rounded-sm bg-black/60 backdrop-blur-sm p-5 relative overflow-hidden slide-right">
+        <div className="absolute -bottom-10 -left-10 w-40 h-40 conic opacity-[0.06] rounded-full" />
+        <div className="flex items-center justify-between">
+          <div className="text-[11px] tracking-[0.3em] text-[var(--neon-cyan)]">// situation</div>
+          <div className="text-[11px] tracking-widest text-gray-500">
+            PRIORITY MAP · {rankings.length}/{scenario.options.length}
+          </div>
+        </div>
+        <div className="mt-2 text-sm md:text-base text-gray-100 leading-relaxed">{scenario.situation}</div>
+        <div className="mt-3 text-[11px] tracking-widest text-gray-500">
+          CLICK OPTIONS IN ORDER OF PRIORITY · click again to unrank
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3">
+        {scenario.options.map((opt, i) => {
+          const r = rankOf(i);
+          const ranked = r !== null;
+          const c = ranked ? color(r) : "#4b5563";
+          return (
+            <div key={i} className="fade-up" style={{ animationDelay: `${120 + i * 90}ms` }}>
+              <TiltCard
+                disabled={logging}
+                active={ranked}
+                onClick={() => onClick(i)}
+                className={
+                  "border rounded-sm p-4 flex items-center gap-4 " +
+                  (ranked
+                    ? "bg-[#001a10] shadow-glow-green"
+                    : "border-gray-800 bg-black/40 hover:border-[var(--neon-cyan)]")
+                }
+                style={{ borderColor: ranked ? c : undefined }}
+              >
+                <div
+                  className="w-14 h-14 shrink-0 flex flex-col items-center justify-center rounded-sm border font-display font-bold tracking-widest relative transition"
+                  style={{
+                    borderColor: c,
+                    color: c,
+                    boxShadow: ranked ? `0 0 18px ${c}55, inset 0 0 14px ${c}22` : "none"
+                  }}
+                >
+                  {ranked ? (
+                    <>
+                      <span className="text-[10px] tracking-[0.2em] opacity-70">RANK</span>
+                      <span className="text-lg leading-none">{label(r)}</span>
+                    </>
+                  ) : (
+                    <span className="text-2xl text-gray-700">·</span>
+                  )}
+                </div>
+                <div className="text-gray-100 text-sm md:text-[15px] leading-relaxed">{opt.text}</div>
+              </TiltCard>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <div className="flex gap-1.5">
+          {scenario.options.map((_, i) => {
+            const r = rankings[i];
+            return (
+              <div
+                key={i}
+                className="w-8 h-1 rounded-full transition-all"
+                style={{
+                  background: r !== undefined ? color(i+1) : "#1f2937",
+                  boxShadow: r !== undefined ? `0 0 10px ${color(i+1)}88` : "none"
+                }}
+              />
+            );
+          })}
+        </div>
+        <button
+          disabled={!ready || logging}
+          onClick={onSubmit}
+          className={
+            "px-6 py-2.5 font-display font-bold text-sm tracking-[0.22em] rounded-sm transition " +
+            (ready && !logging
+              ? "shimmer bg-[var(--neon-green)] text-black shadow-glow-green hover:brightness-110"
+              : "bg-gray-800 text-gray-500 cursor-not-allowed")
+          }
+        >
+          &gt; SUBMIT_RANKINGS
+        </button>
+      </div>
+
+      <div className="mt-5 min-h-[28px]">
+        {logging && (
+          <div className="space-y-1">
+            <SysLine>logging response...</SysLine>
+            <SysLine tone="cyan" delay={180}>rank_vector := stored ✓</SysLine>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Phase3View({ index, total, question, onSelect, logging, lastPicked, completed }) {
+  const { text, done } = useTypewriter(question.question, 18);
+  return (
+    <div className="fade-up max-w-3xl mx-auto">
+      <BrandHeader phase="PHASE_03 // ATTRIBUTION" progress={`question ${index + 1} / ${total}`} active="phase3" completed={completed} />
+
+      <div className="border border-gray-800 rounded-sm bg-black/60 backdrop-blur-sm p-5 md:p-6 relative overflow-hidden slide-right">
+        <div className="absolute -top-8 -right-8 w-48 h-48 conic opacity-[0.06] rounded-full" />
+        <div className="flex items-center gap-2 text-[11px] tracking-[0.3em] text-[var(--neon-violet)] glow-violet">
+          <span className="w-1.5 h-1.5 bg-[var(--neon-violet)] rounded-full animate-pulse" />
+          // why.probe
+        </div>
+        <div className={"mt-2 text-lg md:text-2xl text-gray-100 leading-relaxed font-display " + (done ? "" : "cursor")}>
+          {text}
+        </div>
+      </div>
+
+      <div className="mt-5 grid md:grid-cols-2 gap-3">
+        {question.options.map((opt, i) => {
+          const isPicked = lastPicked && lastPicked.text === opt.text;
+          return (
+            <div key={i} className="fade-up" style={{ animationDelay: `${120 + i * 100}ms` }}>
+              <TiltCard
+                disabled={logging}
+                active={isPicked}
+                onClick={() => onSelect(opt)}
+                className={
+                  "h-full border rounded-sm p-5 md:p-6 " +
+                  (isPicked
+                    ? "border-[var(--neon-green)] bg-[#001a10] shadow-glow-green"
+                    : "border-gray-800 bg-black/40 hover:border-[var(--neon-green)] hover:bg-[#001a10]/50")
+                }
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-[var(--neon-cyan)] glow-cyan text-xs tracking-[0.3em]">[CHOICE_{i + 1}]</div>
+                  <div className="w-6 h-6 border border-gray-700 rounded-sm flex items-center justify-center text-gray-600 text-xs">
+                    {String.fromCharCode(65 + i)}
+                  </div>
+                </div>
+                <div className="text-gray-100 text-sm md:text-[15px] leading-relaxed mt-3">{opt.text}</div>
+              </TiltCard>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 min-h-[28px]">
+        {logging && (
+          <div className="space-y-1">
+            <SysLine>logging response...</SysLine>
+            <SysLine tone="cyan" delay={180}>motive.signal := parsed ✓</SysLine>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ScoreBar({ label, value, delay = 0 }) {
+  const v = useCountUp(value, 1400);
+  const pct = Math.max(0, Math.min(100, (v / 4) * 100));
+  const color = value >= 3 ? "#00ff88" : value >= 2 ? "#ffb020" : "#ff4d6d";
+  const tone  = value >= 3 ? "text-[var(--neon-green)] glow-green" :
+                value >= 2 ? "text-[var(--neon-amber)] glow-amber" :
+                             "text-[var(--neon-red)] glow-red";
+  return (
+    <div className="fade-up" style={{ animationDelay: `${delay}ms` }}>
+      <div className="flex justify-between items-end mb-1">
+        <span className="text-xs md:text-sm tracking-widest text-gray-300">{label}</span>
+        <span className={"text-sm font-bold tabular " + tone}>{v.toFixed(2)} / 4.00</span>
+      </div>
+      <div className="h-3 bg-gray-900/70 border border-gray-800 rounded-sm overflow-hidden relative">
+        <div
+          className="h-full transition-[width] duration-500"
+          style={{ width: pct + "%", background: color, boxShadow: `0 0 12px ${color}99` }}
+        >
+          <div className="absolute inset-0 bar-stripe opacity-40" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- RADAR (SVG) ---------- */
+
+function DimensionRadar({ dimScores }) {
+  const size = 220, cx = size/2, cy = size/2, R = 80;
+  const dims = [
+    { key: "accountability",    label: "OWN",  angle: -Math.PI/2 },
+    { key: "actionOrientation", label: "ACT",  angle: -Math.PI/2 + (2*Math.PI/3) },
+    { key: "perseverance",      label: "GRIT", angle: -Math.PI/2 + (4*Math.PI/3) }
+  ];
+  const levels = [1,2,3,4];
+  const point = (r, a) => [cx + Math.cos(a)*r, cy + Math.sin(a)*r];
+  const poly = dims.map(d => point((dimScores[d.key]/4)*R, d.angle));
+  const polyStr = poly.map(p => p.join(",")).join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[260px] mx-auto">
+      <defs>
+        <radialGradient id="rg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#00ff8855" />
+          <stop offset="100%" stopColor="#00ff8811" />
+        </radialGradient>
+      </defs>
+      {levels.map(l => (
+        <polygon
+          key={l}
+          points={dims.map(d => point((l/4)*R, d.angle).join(",")).join(" ")}
+          fill="none" stroke="#1f2937" strokeDasharray={l < 4 ? "3 3" : ""}
+        />
+      ))}
+      {dims.map((d, i) => {
+        const [x, y] = point(R+2, d.angle);
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#1f2937" />;
+      })}
+      <polygon points={polyStr} fill="url(#rg)" stroke="#00ff88" strokeWidth="1.5" style={{ filter: "drop-shadow(0 0 6px #00ff88aa)" }} />
+      {dims.map((d, i) => {
+        const [px, py] = point((dimScores[d.key]/4)*R, d.angle);
+        return <circle key={i} cx={px} cy={py} r="3.5" fill="#00ff88" style={{ filter: "drop-shadow(0 0 4px #00ff88)" }} />;
+      })}
+      {dims.map((d, i) => {
+        const [lx, ly] = point(R + 18, d.angle);
+        return (
+          <text key={i} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
+                fill="#00e5ff" fontSize="10" fontFamily="JetBrains Mono" letterSpacing="2">
+            {d.label}
+          </text>
+        );
+      })}
+    </svg>
+  );
+}
+
+function ResultsView({ name, result, onRestart }) {
+  const persona = PERSONA[result.level];
+  const summary = LEVEL_SUMMARY[result.level];
+  const tip = DEV_TIP[result.weakest];
+  const score = useCountUp(result.finalScore, 1600);
+  const [reveal, setReveal] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setReveal(true), 400); return () => clearTimeout(t); }, []);
+
+  return (
+    <div className="fade-up max-w-5xl mx-auto">
+      <ConfettiBurst show={reveal && result.level >= 3} />
+      <BrandHeader phase="RESULTS // REPORT" progress="render complete" active="results" completed={["intro","phase1","phase2","phase3"]} />
+
+      <div className="space-y-1.5 mb-6">
+        <SysLine delay={0}>compiling dimensional vector ✓</SysLine>
+        <SysLine delay={140}>applying weight_matrix [0.40 · 0.35 · 0.25] ✓</SysLine>
+        <SysLine delay={280} tone="cyan">dispatching report...</SysLine>
+      </div>
+
+      <div className="relative border border-[var(--neon-green)] bg-black/60 backdrop-blur-sm rounded-sm p-6 md:p-10 shadow-glow-green overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full conic opacity-[0.08]" />
+        <div className="absolute -bottom-16 -left-16 w-60 h-60 orb" style={{ background: persona.accent }} />
+
+        <div className="text-[11px] tracking-[0.35em] text-[var(--neon-cyan)] mb-2">// CANDIDATE_PROFILE</div>
+        <div className="font-display text-2xl md:text-3xl font-semibold tracking-wide text-gray-100">
+          {name}
+        </div>
+        <div className="mt-5 flex flex-wrap items-baseline gap-3">
+          <span
+            className="font-display glow-green text-5xl md:text-7xl font-extrabold tracking-tight"
+            style={{ color: persona.accent, textShadow: `0 0 12px ${persona.accent}99, 0 0 30px ${persona.accent}55` }}
+          >
+            {persona.label}
+          </span>
+          <span className="text-[var(--neon-cyan)] glow-cyan text-xl md:text-2xl font-bold tracking-widest">
+            // {persona.tag}
+          </span>
+        </div>
+        <div className="mt-6 grid grid-cols-2 gap-4 max-w-md">
+          <div>
+            <div className="text-[11px] tracking-widest text-gray-500">FINAL_SCORE</div>
+            <div className="text-3xl md:text-4xl font-display font-bold text-[var(--neon-green)] glow-green tabular">
+              {score.toFixed(2)}
+              <span className="text-sm text-gray-500 font-normal"> / 4.00</span>
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] tracking-widest text-gray-500">PROFICIENCY</div>
+            <div className="text-3xl md:text-4xl font-display font-bold text-[var(--neon-cyan)] glow-cyan">
+              LEVEL {result.level}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {result.consistencyFlag && (
+        <div className="mt-5 fade-up border border-[var(--neon-amber)] bg-[#2a1a00]/70 rounded-sm px-5 py-3 flex items-start gap-3">
+          <span className="text-[var(--neon-amber)] glow-amber text-lg leading-none mt-0.5">⚠</span>
+          <div>
+            <div className="text-[var(--neon-amber)] glow-amber text-sm font-bold tracking-widest">
+              POSSIBLE CONSISTENCY GAP DETECTED
+            </div>
+            <div className="text-xs md:text-sm text-amber-100/80 mt-1">
+              Response signature in Phase 02 diverged from stated behavior in Phase 01. Recommend a structured follow-up in interview to probe stated vs. revealed preference.
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-6 grid lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-3 border border-gray-800 bg-black/40 rounded-sm p-5 fade-up" style={{ animationDelay: "200ms" }}>
+          <div className="text-[11px] tracking-widest text-[var(--neon-cyan)] mb-4">// DIMENSION_VECTOR</div>
+          <div className="space-y-5">
+            <ScoreBar label={DIMENSION_LABEL.accountability}    value={result.dimScores.accountability}    delay={250} />
+            <ScoreBar label={DIMENSION_LABEL.actionOrientation} value={result.dimScores.actionOrientation} delay={380} />
+            <ScoreBar label={DIMENSION_LABEL.perseverance}      value={result.dimScores.perseverance}      delay={510} />
+          </div>
+        </div>
+        <div className="lg:col-span-2 border border-gray-800 bg-black/40 rounded-sm p-5 fade-up flex flex-col items-center justify-center" style={{ animationDelay: "300ms" }}>
+          <div className="text-[11px] tracking-widest text-[var(--neon-cyan)] mb-4 self-start">// RADAR_PROJECTION</div>
+          <DimensionRadar dimScores={result.dimScores} />
+        </div>
+      </div>
+
+      <div className="mt-5 grid md:grid-cols-2 gap-5">
+        <div className="border border-gray-800 bg-black/40 rounded-sm p-5 fade-up" style={{ animationDelay: "420ms" }}>
+          <div className="text-[11px] tracking-widest text-[var(--neon-cyan)] mb-2">// BEHAVIORAL_SUMMARY</div>
+          <div className="text-sm text-gray-100 leading-relaxed">{summary[0]}</div>
+          <div className="text-sm text-gray-400 leading-relaxed mt-2">{summary[1]}</div>
+        </div>
+        <div className="border border-gray-800 bg-black/40 rounded-sm p-5 fade-up relative overflow-hidden" style={{ animationDelay: "520ms" }}>
+          <div className="absolute -top-10 -right-10 w-40 h-40 conic opacity-[0.08] rounded-full" />
+          <div className="text-[11px] tracking-widest text-[var(--neon-green)] mb-2">
+            // DEVELOPMENT_FOCUS · {DIMENSION_LABEL[result.weakest]}
+          </div>
+          <div className="text-sm text-gray-100 leading-relaxed">{tip}</div>
+        </div>
+      </div>
+
+      <div className="mt-8 flex flex-wrap gap-3">
+        <button
+          onClick={onRestart}
+          className="shimmer px-6 py-2.5 font-display font-bold text-sm tracking-[0.22em] rounded-sm bg-[var(--neon-green)] text-black shadow-glow-green hover:brightness-110"
+        >
+          &gt; RESTART_PROTOCOL
+        </button>
+        <button
+          onClick={() => window.print()}
+          className="px-6 py-2.5 font-display font-bold text-sm tracking-[0.22em] rounded-sm border border-[var(--neon-cyan)] text-[var(--neon-cyan)] hover:bg-[var(--neon-cyan)] hover:text-black transition"
+        >
+          &gt; EXPORT_REPORT
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- ROOT ---------- */
+
+function CatalystProtocol() {
+  const [view, setView] = useState("intro");
+  const [prevView, setPrevView] = useState(null);
+  const [loadingLabel, setLoadingLabel] = useState(null);
+  const [candidateName, setCandidateName] = useState("");
+
+  const [phase1Answers, setPhase1Answers] = useState([]);
+  const [phase2Answers, setPhase2Answers] = useState([]);
+  const [phase3Answers, setPhase3Answers] = useState([]);
+
+  const [phase1Index, setPhase1Index] = useState(0);
+  const [phase2Index, setPhase2Index] = useState(0);
+  const [phase3Index, setPhase3Index] = useState(0);
+
+  const [phase1Picked, setPhase1Picked] = useState(null);
+  const [phase3Picked, setPhase3Picked] = useState(null);
+
+  const [rankings, setRankings] = useState([]);
+  const rankingsRef = useRef([]);
+  useEffect(() => { rankingsRef.current = rankings; }, [rankings]);
+
+  const [timeLeft, setTimeLeft] = useState(PHASE1_TIMER);
+  const [logging, setLogging] = useState(false);
+  const loggingRef = useRef(false);
+  useEffect(() => { loggingRef.current = logging; }, [logging]);
+
+  const [scanKey, setScanKey] = useState(0);
+
+  const completed = useMemo(() => {
+    const c = [];
+    if (view !== "intro") c.push("intro");
+    if (phase1Answers.length === phase1Scenarios.length) c.push("phase1");
+    if (phase2Answers.length === phase2Scenarios.length) c.push("phase2");
+    if (phase3Answers.length === phase3Questions.length) c.push("phase3");
+    return c;
+  }, [view, phase1Answers, phase2Answers, phase3Answers]);
+
+  const transitionTo = useCallback((next, label) => {
+    setLoadingLabel(label);
+    setView("loading");
+    setScanKey(k => k + 1);
+    setTimeout(() => { setLoadingLabel(null); setView(next); setScanKey(k => k + 1); }, TRANSITION_MS);
+  }, []);
+
+  /* PHASE 1 */
+
+  const submitPhase1 = useCallback((option, auto = false) => {
+    if (loggingRef.current) return;
+    const scenario = phase1Scenarios[phase1Index];
+    setPhase1Picked(option);
+    setPhase1Answers(prev => [...prev, {
+      id: scenario.id, dimension: scenario.dimension, level: option.level, auto
+    }]);
+    setLogging(true);
+    setTimeout(() => {
+      setLogging(false); setPhase1Picked(null);
+      if (phase1Index + 1 < phase1Scenarios.length) setPhase1Index(phase1Index + 1);
+      else transitionTo("phase2", "NEXT MODULE · RANK_ORDER");
+    }, LOG_MS);
+  }, [phase1Index, transitionTo]);
+
+  useEffect(() => {
+    if (view !== "phase1" || logging) return;
+    const start = Date.now(); const duration = PHASE1_TIMER * 1000;
+    setTimeLeft(PHASE1_TIMER);
+    let cancelled = false, fired = false;
+    const tick = () => {
+      if (cancelled) return;
+      const remaining = Math.max(0, (duration - (Date.now() - start)) / 1000);
+      setTimeLeft(remaining);
+      if (remaining <= 0 && !fired) {
+        fired = true;
+        const scenario = phase1Scenarios[phase1Index];
+        const lowest = [...scenario.options].sort((a,b) => a.level - b.level)[0];
+        submitPhase1(lowest, true);
+      } else if (remaining > 0) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    return () => { cancelled = true; };
+  }, [view, phase1Index, logging, submitPhase1]);
+
+  /* PHASE 2 */
+
+  const submitPhase2 = useCallback((orderIndices, auto = false) => {
+    if (loggingRef.current) return;
+    const scenario = phase2Scenarios[phase2Index];
+    const ordered = orderIndices.map(i => scenario.options[i]);
+    setPhase2Answers(prev => [...prev, {
+      id: scenario.id, dimension: scenario.dimension, rankings: ordered, auto
+    }]);
+    setLogging(true);
+    setTimeout(() => {
+      setLogging(false); setRankings([]);
+      if (phase2Index + 1 < phase2Scenarios.length) setPhase2Index(phase2Index + 1);
+      else transitionTo("phase3", "NEXT MODULE · ATTRIBUTION");
+    }, LOG_MS);
+  }, [phase2Index, transitionTo]);
+
+  useEffect(() => {
+    if (view !== "phase2" || logging) return;
+    const start = Date.now(); const duration = PHASE2_TIMER * 1000;
+    setTimeLeft(PHASE2_TIMER);
+    let cancelled = false, fired = false;
+    const tick = () => {
+      if (cancelled) return;
+      const remaining = Math.max(0, (duration - (Date.now() - start)) / 1000);
+      setTimeLeft(remaining);
+      if (remaining <= 0 && !fired) {
+        fired = true;
+        const scenario = phase2Scenarios[phase2Index];
+        const current = [...rankingsRef.current];
+        for (let i = 0; i < scenario.options.length; i++) if (!current.includes(i)) current.push(i);
+        submitPhase2(current, true);
+      } else if (remaining > 0) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    return () => { cancelled = true; };
+  }, [view, phase2Index, logging, submitPhase2]);
+
+  const onPhase2Click = (idx) => {
+    if (logging) return;
+    setRankings(prev => {
+      if (prev.includes(idx)) return prev.filter(i => i !== idx);
+      if (prev.length >= phase2Scenarios[phase2Index].options.length) return prev;
+      return [...prev, idx];
+    });
+  };
+
+  /* PHASE 3 */
+
+  const submitPhase3 = useCallback((option) => {
+    if (loggingRef.current) return;
+    const q = phase3Questions[phase3Index];
+    setPhase3Picked(option);
+    setPhase3Answers(prev => [...prev, { id: q.id, dimension: q.dimension, level: option.level }]);
+    setLogging(true);
+    setTimeout(() => {
+      setLogging(false); setPhase3Picked(null);
+      if (phase3Index + 1 < phase3Questions.length) setPhase3Index(phase3Index + 1);
+      else transitionTo("results", "COMPILING REPORT");
+    }, LOG_MS);
+  }, [phase3Index, transitionTo]);
+
+  /* RESULTS */
+
+  const result = useMemo(() => {
+    if (view !== "results") return null;
+    return computeResults(phase1Answers, phase2Answers, phase3Answers);
+  }, [view, phase1Answers, phase2Answers, phase3Answers]);
+
+  const restart = () => {
+    setPhase1Answers([]); setPhase2Answers([]); setPhase3Answers([]);
+    setPhase1Index(0); setPhase2Index(0); setPhase3Index(0);
+    setRankings([]); setPhase1Picked(null); setPhase3Picked(null);
+    setCandidateName("");
+    setView("intro");
+  };
+
+  const body = (() => {
+    if (view === "intro")   return <IntroView onStart={(n) => { setCandidateName(n); transitionTo("phase1", "MODULE · SJT_BOT"); }} />;
+    if (view === "loading") return <LoadingView label={loadingLabel || "NEXT MODULE..."} />;
+    if (view === "phase1")  return <Phase1View index={phase1Index} total={phase1Scenarios.length} scenario={phase1Scenarios[phase1Index]} timeLeft={timeLeft} onSelect={submitPhase1} logging={logging} lastPicked={phase1Picked} completed={completed} />;
+    if (view === "phase2")  return <Phase2View index={phase2Index} total={phase2Scenarios.length} scenario={phase2Scenarios[phase2Index]} timeLeft={timeLeft} rankings={rankings} onClick={onPhase2Click} onSubmit={() => submitPhase2(rankings, false)} logging={logging} completed={completed} />;
+    if (view === "phase3")  return <Phase3View index={phase3Index} total={phase3Questions.length} question={phase3Questions[phase3Index]} onSelect={submitPhase3} logging={logging} lastPicked={phase3Picked} completed={completed} />;
+    if (view === "results" && result) return <ResultsView name={candidateName} result={result} onRestart={restart} />;
+    return null;
+  })();
+
+  return (
+    <div className="relative min-h-screen bg-noise">
+      <MatrixRain />
+      <div className="fixed inset-0 grid-bg pointer-events-none opacity-60" />
+      <div className="fixed inset-0 scanlines" />
+      <div className="fixed inset-0 pointer-events-none" style={{
+        background: "radial-gradient(ellipse at top, rgba(0,229,255,0.08), transparent 60%), radial-gradient(ellipse at bottom, rgba(0,255,136,0.06), transparent 60%)"
+      }} />
+      <div key={scanKey} className="scan-overlay" />
+      <div className="relative px-4 md:px-8 py-8 md:py-12 z-10">
+        {body}
+        <div className="max-w-5xl mx-auto mt-12 pt-6 border-t border-gray-900 text-[10px] md:text-xs text-gray-600 tracking-widest flex justify-between">
+          <span>CATALYST_PROTOCOL · v0.2.0 · POC</span>
+          <span className="hidden md:inline">© HYREO_LABS // BAND_01_BEHAVIORAL_ASSESSMENT</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<CatalystProtocol />);
+</script>
+</body>
+</html>
