@@ -14,68 +14,73 @@
 
   /* ---------- LEVEL 1 — 6 SJT Scenarios (dimension × 2 each) ---------- */
 
+  // LEVEL 1 · Execution Lab — 6 SJT scenarios, 4 options each (BARS 1–4 spread).
+  // Options are shuffled per-scenario at render time (see shuffleOptions helper).
   var L1 = [
-    /* Accountability ×2 */
     {
-      id: "L1a1", dimension: "accountability",
-      prompt: "You spot a bug in your own code after it's merged to Staging. QA hasn't flagged it yet.",
+      id: "L1-1", dimension: "accountability",
+      title: "The Vanishing Stakeholder",
+      prompt: "It is 4:00 PM. A critical project release is set for 5:00 PM. You need a final sign-off from a stakeholder who has suddenly gone offline and isn't answering calls.",
       options: [
-        { id: "a", text: "Wait for QA to catch it — if they miss it, it's probably minor.",   level: 1 },
-        { id: "b", text: "Mention it in tomorrow's standup so the team knows.",               level: 2 },
-        { id: "c", text: "Create a ticket and inform the lead; fix next sub-sprint.",         level: 3 },
-        { id: "d", text: "Fix it now, push a patch, and verify on Staging yourself.",         level: 4 }
+        { id: "a", text: "I will not put much pressure — I'll wait for them to come back online. We cannot risk an unapproved release.", level: 1 },
+        { id: "b", text: "I'll send a final 'Urgent' email to the stakeholder and alert my manager that the delay is due to the stakeholder's absence.", level: 2 },
+        { id: "c", text: "I'll review their previous requirements, proceed with the release, and send a summary of why I moved forward.", level: 3 },
+        { id: "d", text: "I'll get a verbal 'go' from their deputy or a peer with authority, document the risk, and ensure the release happens by 5:00 PM.", level: 4 }
       ]
     },
     {
-      id: "L1a2", dimension: "accountability",
-      prompt: "Your latest commit may have broken smoke tests. QA wants to rollback immediately.",
+      id: "L1-2", dimension: "actionOrientation",
+      title: "The Resource Crunch",
+      prompt: "Your lead developer's system just crashed. 20% of the project is locked in that machine, and the client is expecting delivery in two hours.",
       options: [
-        { id: "a", text: "Let QA rollback; I'll investigate tomorrow.",                       level: 1 },
-        { id: "b", text: "Let QA rollback; review logs after the env stabilizes.",            level: 2 },
-        { id: "c", text: "Ask QA to hold 5 minutes while I check locally.",                   level: 3 },
-        { id: "d", text: "Reproduce locally, push a targeted hotfix, verify before rollback.",level: 4 }
-      ]
-    },
-    /* Action Orientation ×2 */
-    {
-      id: "L1b1", dimension: "actionOrientation",
-      prompt: "API docs for your next ticket won't be ready for 4 hours. Team Lead says wait or start early.",
-      options: [
-        { id: "a", text: "Wait — coding without docs wastes effort.",                          level: 1 },
-        { id: "b", text: "Read adjacent code for context while waiting.",                      level: 2 },
-        { id: "c", text: "Set up boilerplate and mock interfaces so I'm ready.",               level: 3 },
-        { id: "d", text: "Scaffold the module; draft clarification questions for the API owner.", level: 4 }
+        { id: "a", text: "I'll inform the client that we have a technical failure and will resume as soon as the system is fixed.", level: 1 },
+        { id: "b", text: "I'll tell the developer to let me know the moment the laptop is fixed so we can start work immediately.", level: 2 },
+        { id: "c", text: "I'll ask the developer to work on manual documentation while I look for a spare laptop in the office.", level: 3 },
+        { id: "d", text: "I'll take the lead to re-assign the remaining 20% of the tasks to other team members to ensure we hit the target today.", level: 4 }
       ]
     },
     {
-      id: "L1b2", dimension: "actionOrientation",
-      prompt: "A critical feature lands on your plate mid-sprint. Quality bar is tight.",
+      id: "L1-3", dimension: "actionOrientation",
+      title: "The Empty Brief",
+      prompt: "You are tasked with launching a new initiative, but the project brief is extremely vague and your manager is too busy to provide a detailed walkthrough.",
       options: [
-        { id: "a", text: "Defer entirely until next sprint — quality first.",                   level: 1 },
-        { id: "b", text: "Push back on scope until something is dropped from this sprint.",     level: 2 },
-        { id: "c", text: "Ship a minimal viable version with known risks; plan a follow-up.",   level: 3 },
-        { id: "d", text: "Pause non-critical work, reallocate focus, deliver with full tests.", level: 4 }
-      ]
-    },
-    /* Perseverance ×2 */
-    {
-      id: "L1c1", dimension: "perseverance",
-      prompt: "You've been debugging a logic error for 3 hours. Sprint deadline is in 2 hours.",
-      options: [
-        { id: "a", text: "Drop the ticket — mark it blocked.",                                  level: 1 },
-        { id: "b", text: "Escalate to senior dev immediately.",                                 level: 2 },
-        { id: "c", text: "Take a 5-min break, then try a completely different approach.",       level: 3 },
-        { id: "d", text: "Fix it, then document the gotcha in the team wiki.",                  level: 4 }
+        { id: "a", text: "I usually wait for a formal briefing or more detailed instructions to avoid making any costly mistakes.", level: 1 },
+        { id: "b", text: "I spend time researching past projects to find a template or guide before I feel comfortable starting.", level: 2 },
+        { id: "c", text: "I schedule short 5-minute stand-ups with team members to piece together the requirements and build a roadmap.", level: 3 },
+        { id: "d", text: "I create a rough 'Version 1.0' draft immediately and present it to stakeholders to force a reaction and gain clarity through iteration.", level: 4 }
       ]
     },
     {
-      id: "L1c2", dimension: "perseverance",
-      prompt: "A flaky test keeps failing your CI. The team thinks it's a nuisance.",
+      id: "L1-4", dimension: "accountability",
+      title: "The Critical Data Gap",
+      prompt: "You realize a colleague made a significant error in a report sent to a client an hour ago. Your colleague has just left for a week-long vacation.",
       options: [
-        { id: "a", text: "Disable it — not worth the time.",                                     level: 1 },
-        { id: "b", text: "Retry the pipeline and hope for green.",                               level: 2 },
-        { id: "c", text: "Open a ticket with repro steps so someone picks it up later.",         level: 3 },
-        { id: "d", text: "Investigate the race, fix the root cause, add a regression test.",    level: 4 }
+        { id: "a", text: "I'll wait for the colleague to return — they're the one who can explain the logic, and it doesn't look nice to intervene on their work while they're away.", level: 1 },
+        { id: "b", text: "I'll alert my supervisor to the error so they know it wasn't my mistake, and wait for their guidance.", level: 2 },
+        { id: "c", text: "I'll send a polite update to the client acknowledging the error and promising a corrected version with a timeline.", level: 3 },
+        { id: "d", text: "I'll re-calculate the data myself immediately, send the corrected report to the client with an apology, and brief my colleague later.", level: 4 }
+      ]
+    },
+    {
+      id: "L1-5", dimension: "perseverance",
+      title: "The Impossible Target",
+      prompt: "Think of a time you were given a target the rest of the team felt was impossible within the timeframe. If you haven't faced this exact situation, imagine it — and respond with your natural instinct.",
+      options: [
+        { id: "a", text: "I focused on doing my specific part reliably but prepared stakeholders for a likely 'near-miss' on the final goal.", level: 1 },
+        { id: "b", text: "I worked hard during office hours but suggested to the lead that the target be reassessed to a more realistic level.", level: 2 },
+        { id: "c", text: "I identified the biggest bottlenecks and put in extra hours to clear them, ensuring we got as close to the target as possible.", level: 3 },
+        { id: "d", text: "I looked for unconventional process hacks to bypass obstacles and kept the team energized until the 'impossible' goal was met.", level: 4 }
+      ]
+    },
+    {
+      id: "L1-6", dimension: "perseverance",
+      title: "The Recurring Obstacle",
+      prompt: "You are working on a complex technical task that has failed three times already due to minor, unpredictable bugs. Your energy is dipping.",
+      options: [
+        { id: "a", text: "I'll ask for the task to be re-assigned to someone with a fresh set of eyes to avoid further delays.", level: 1 },
+        { id: "b", text: "I'll document the three failures and ask for a technical consult before trying a fourth time.", level: 2 },
+        { id: "c", text: "I'll take a short break to reset, then methodically re-check the entire logic from scratch before attempting it again.", level: 3 },
+        { id: "d", text: "I'll analyze the failure patterns, create a new quality checklist, and stay with the task until it is successfully completed.", level: 4 }
       ]
     }
   ];
@@ -83,29 +88,42 @@
   /* ---------- LEVEL 2 — Behavioral Monitoring (Avatar + Basket) ---------- */
 
   // LEVEL 2 — The Character Mirror (Identity Projection)
-  // A single module containing an avatar (Alex) and 6 behavior cards.
-  // Player sees cards one-by-one and drops each into "More Like Me" or
-  // "Less Like Me" basket (or lets the 15s timer skip). Section ends
-  // as soon as BOTH baskets have one card, or after all 6 are seen.
+  // 9 cards: 3 per dimension (BARS 2 / 3 / 4). Candidate marks each card as
+  // "More Like Me" or "Less Like Me" (or skips). Deck is shuffled with a
+  // balance constraint: no 3 same-dimension cards in a row.
+  // Avatar is chosen before the briefing — Alex or Avantika — and the card
+  // texts are filled via {NAME}/{he}/{his}/... placeholders.
   var L2 = [
     {
       id: "L2-mirror",
-      avatar: { name: "Alex", role: "High-performing Lead", emoji: "🧑‍💼" },
-      briefing: "Meet Alex, a high-performing lead. You'll see how Alex handles various work situations and the logic behind each action. Your task: decide if each is 'More Like Me' or 'Less Like Me'. There are no right or wrong styles — we're building your unique execution signature.",
-      instruction: "You'll see 6 cards. Pick one that's MOST like you and one that's LEAST like you. The section ends when both baskets are full — or after all 6 cards.",
+      avatars: [
+        { id: "alex",     name: "Alex",     emoji: "🧑‍💼", role: "High-performing Lead", subj: "he",  obj: "him", poss: "his", refl: "himself" },
+        { id: "avantika", name: "Avantika", emoji: "👩‍💼", role: "High-performing Lead", subj: "she", obj: "her", poss: "her", refl: "herself" }
+      ],
+      briefingTpl: "Meet {NAME}, a high-performing lead. In this section, you will see how {NAME} handles various work situations and the logic behind those actions. Your task is to decide: is this 'More Like Me' or 'Less Like Me'? There are no right or wrong styles — we're building a map of your unique execution signature.",
+      instruction: "You'll see 9 cards (3 per dimension). For each, tap More Like Me or Less Like Me. Skips are allowed.",
       cards: [
+        // Action Orientation × 3
         { id: "a2", dimension: "actionOrientation", level: 2,
-          text: "Alex prefers to wait for a finalized project brief from the manager before starting, as he believes executing without a clear plan is a waste of resources." },
+          text: "{NAME} prefers to wait for a finalized project brief from the manager before starting, as {he} believes executing without a clear plan is a waste of resources." },
+        { id: "a3", dimension: "actionOrientation", level: 3,
+          text: "{NAME} spends significant time in the planning phase to anticipate risks, believing that a cautious start leads to a smoother finish." },
         { id: "a4", dimension: "actionOrientation", level: 4,
-          text: "Alex launches projects with a 'rough draft' because he believes real-world feedback is more valuable than a perfect initial plan." },
+          text: "{NAME} launches projects with a 'rough draft' because {he} believes real-world feedback is more valuable than a perfect initial plan." },
+        // Accountability × 3
         { id: "b2", dimension: "accountability", level: 2,
-          text: "Alex focuses strictly on his own assigned tasks, believing that if everyone does their individual part perfectly, the team will succeed." },
+          text: "{NAME} focuses strictly on {his} own assigned tasks, believing that if everyone does their individual part perfectly, the team will succeed." },
+        { id: "b3", dimension: "accountability", level: 3,
+          text: "{NAME} takes full responsibility for {his} own errors and fixes them immediately, ensuring {his} work never delays the rest of the team." },
         { id: "b4", dimension: "accountability", level: 4,
-          text: "Alex stays late to fix a teammate's error because he feels the final client outcome is his personal responsibility, regardless of who made the mistake." },
+          text: "{NAME} stays late to fix a teammate's error because {he} feels the final client outcome is {his} personal responsibility, regardless of who made the mistake." },
+        // Perseverance × 3
         { id: "c2", dimension: "perseverance", level: 2,
-          text: "Alex likes to move on to new, exciting projects once the initial 'logic' is solved, believing his best value is in fresh problem-solving rather than routine execution." },
+          text: "{NAME} likes to move on to new, exciting projects once the initial 'logic' is solved, believing {his} best value is in fresh problem-solving rather than routine execution." },
+        { id: "c3", dimension: "perseverance", level: 3,
+          text: "{NAME} sets personal weekly milestones to keep {refl} motivated while working on long-term, repetitive projects." },
         { id: "c4", dimension: "perseverance", level: 4,
-          text: "Alex prefers to stay on a complex, repetitive task for months because he finds deep satisfaction in seeing a difficult problem through to the end." }
+          text: "{NAME} prefers to stay on a complex, repetitive task for months because {he} finds deep satisfaction in seeing a difficult problem through to the end." }
       ]
     }
   ];
@@ -177,14 +195,15 @@
   /* ---------- CONSTANTS ---------- */
 
   var CONSTANTS = {
-    L1_TIMER: 15,            // 15s per L1 scenario
-    L2_CARD_TIMER: 15,       // 15s per Character-Mirror card
-    L3_TIMER: 25,            // 25s for ranking
-    L4_TIMER: 20,            // 20s per Mastermind question
+    L1_TIMER: 15,                  // 15s per L1 scenario
+    L2_CARD_TIMER: 15,             // 15s per Character-Mirror card
+    L3_TIMER: 25,                  // 25s for ranking
+    L4_TIMER: 20,                  // 20s per Mastermind question
     TRANSITION_MS: 1500,
     LOG_MS: 650,
-    MIRROR_LEAST_BONUS: 0.3, // Bonus if BARS-2 card dropped into "Less Like Me"
-    MIRROR_LEAST_PENALTY: 0.5// Penalty if BARS-4 card dropped into "Less Like Me"
+    MIRROR_LEAST_BONUS: 0.2,       // Bonus if BARS-2 card marked Less Like Me
+    MIRROR_LEAST_PENALTY: 0.3,     // Penalty if BARS-4 card marked Less Like Me
+    LOW_URGENCY_THRESHOLD_MS: 12000// Flag low urgency if Action-Orientation L1 response > 12s
   };
 
   /* ---------- META ---------- */
@@ -196,10 +215,17 @@
   };
 
   var LEVEL_META = {
-    1: { key: "explorer",   title: "The Explorer",   tag: "EXPLORER",   sub: "Tactical Response",         narrative: "You have entered a system under stress. Respond quickly to stabilize it." },
-    2: { key: "observer",   title: "The Observer",   tag: "OBSERVER",   sub: "Behavioral Monitoring",     narrative: "Watch how others act. Pick the BEST move and drop it into the Success Basket." },
-    3: { key: "strategist", title: "The Strategist", tag: "STRATEGIST", sub: "Decision & Prioritization", narrative: "Resources are limited. Rank your priorities from highest to lowest." },
-    4: { key: "mastermind", title: "The Mastermind", tag: "MASTERMIND", sub: "Self-Concept & Motivation", narrative: "Look inward. Which statement truly describes your drive?" }
+    1: { key: "explorer",   title: "The Execution Lab", tag: "EXPLORER",   sub: "Tactical Response",
+         narrative: "You are about to enter a high-fidelity simulation of real-world professional challenges. Each scenario comes with four distinct actions — each one valid, each one mapped to a different behavioral attribute. Trust your first instinct.",
+         guidelines: [
+           "No right or wrong answers — every option is evaluated through multiple lenses.",
+           "Authenticity over strategy — pick what you'd actually do in the moment.",
+           "Decisiveness matters — your selections build a high-precision map of your execution signature."
+         ]
+       },
+    2: { key: "observer",   title: "The Character Mirror", tag: "OBSERVER",   sub: "Behavioral Monitoring",     narrative: "Meet your character. Watch how they handle various work situations. Decide whether each move is More Like You or Less Like You." },
+    3: { key: "strategist", title: "The Strategist",       tag: "STRATEGIST", sub: "Decision & Prioritization", narrative: "Resources are limited. Rank your priorities from highest to lowest." },
+    4: { key: "mastermind", title: "The Mastermind",       tag: "MASTERMIND", sub: "Self-Concept & Motivation", narrative: "Look inward. Which statement truly describes your drive?" }
   };
 
   var FINAL_LEVEL_META = {
@@ -301,15 +327,17 @@
       if (!byDim[a.dimension]) return;
       byDim[a.dimension].push(a.level);
     });
-    // L2 Character Mirror — mostLikely contributes, leastLikely adjusts bonus/penalty
+    // L2 Character Mirror — per-card "more" / "less" decisions across 9 cards
     l2.forEach(function (a) {
-      if (a.mostLikely && byDim[a.mostLikely.dimension]) {
-        byDim[a.mostLikely.dimension].push(a.mostLikely.level);
-      }
-      if (a.leastLikely && byDim[a.leastLikely.dimension]) {
-        if (a.leastLikely.level === 2) bonus[a.leastLikely.dimension]   += CONSTANTS.MIRROR_LEAST_BONUS;
-        if (a.leastLikely.level === 4) penalty[a.leastLikely.dimension] += CONSTANTS.MIRROR_LEAST_PENALTY;
-      }
+      (a.decisions || []).forEach(function (d) {
+        if (!d || !byDim[d.dimension]) return;
+        if (d.decision === "most") {
+          byDim[d.dimension].push(d.level);
+        } else if (d.decision === "least") {
+          if (d.level === 2) bonus[d.dimension]   += CONSTANTS.MIRROR_LEAST_BONUS;
+          if (d.level === 4) penalty[d.dimension] += CONSTANTS.MIRROR_LEAST_PENALTY;
+        }
+      });
     });
     l3.forEach(function (a) { if (byDim[a.dimension]) byDim[a.dimension].push(a.rankings[0].level); });
     l4.forEach(function (a) { if (byDim[a.dimension]) byDim[a.dimension].push(a.level); });
@@ -376,6 +404,44 @@
       });
     }
 
+    // Social Desirability Bias (L2 Character Mirror):
+    // If the user marked BOTH the BARS-2 and BARS-4 cards of the SAME dimension
+    // as "More Like Me", these positions are contradictory (cautious vs. bold)
+    // and signal aspirational/socially-desirable responding.
+    l2.forEach(function (a) {
+      var mostLevelsByDim = {};
+      (a.decisions || []).forEach(function (d) {
+        if (!d || d.decision !== "most") return;
+        (mostLevelsByDim[d.dimension] = mostLevelsByDim[d.dimension] || {})[d.level] = true;
+      });
+      var contradictoryDims = Object.keys(mostLevelsByDim).filter(function (k) {
+        return mostLevelsByDim[k][2] && mostLevelsByDim[k][4];
+      });
+      if (contradictoryDims.length > 0) {
+        flags.push({
+          key: "socialDesirability",
+          label: "Social Desirability Bias",
+          severity: "amber",
+          detail: "In the Character Mirror the candidate identified with BOTH the cautious (BARS-2) and bold (BARS-4) positions in the same dimension(s): " + contradictoryDims.join(", ") + ". These stances are contradictory; responses may favour desirability over authenticity."
+        });
+      }
+    });
+
+    // Low Urgency (Level 1 Action-Orientation items):
+    // If the candidate spent more than LOW_URGENCY_THRESHOLD_MS on an
+    // Action-Orientation scenario, flag regardless of the eventual pick.
+    var slowActionItems = l1.filter(function (a) {
+      return a.dimension === "actionOrientation" && a.responseMs && a.responseMs > CONSTANTS.LOW_URGENCY_THRESHOLD_MS && !a.auto;
+    });
+    if (slowActionItems.length > 0) {
+      flags.push({
+        key: "lowUrgency",
+        label: "Low Urgency Signal",
+        severity: "info",
+        detail: "Candidate spent >" + (CONSTANTS.LOW_URGENCY_THRESHOLD_MS / 1000) + "s on " + slowActionItems.length + " Action-Orientation scenario(s). Stated urgency may exceed observed urgency."
+      });
+    }
+
     // Strongest / weakest
     var entries = Object.keys(dimScores).map(function (k) { return [k, dimScores[k]]; }).filter(function (e) { return e[1] > 0; });
     var strongest = entries.slice().sort(function (a, b) { return b[1] - a[1]; })[0][0];
@@ -401,6 +467,52 @@
         flags: flags
       }
     };
+  }
+
+  /* ---------- SHUFFLE + TEMPLATE HELPERS ---------- */
+
+  function shuffleArray(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  // Fisher-Yates shuffle with rejection: re-shuffle if >maxRun cards share
+  // the same dimension consecutively. Used for the 9-card Character Mirror deck.
+  function shuffleBalanced(cards, maxRun) {
+    maxRun = maxRun || 2;
+    var attempts = 0;
+    while (attempts < 30) {
+      var a = shuffleArray(cards);
+      var run = 1, ok = true;
+      for (var i = 1; i < a.length; i++) {
+        if (a[i].dimension === a[i-1].dimension) {
+          run++;
+          if (run > maxRun) { ok = false; break; }
+        } else run = 1;
+      }
+      if (ok) return a;
+      attempts++;
+    }
+    return cards.slice();
+  }
+
+  // Fill {NAME}/{he}/{his}/{him}/{refl} placeholders from the avatar object.
+  function fillAvatar(tpl, avatar) {
+    if (!tpl || !avatar) return tpl || "";
+    var sub = {
+      NAME: avatar.name,
+      he:   avatar.subj,
+      him:  avatar.obj,
+      his:  avatar.poss,
+      refl: avatar.refl
+    };
+    return String(tpl).replace(/\{(\w+)\}/g, function (_, k) {
+      return (sub[k] !== undefined) ? sub[k] : "";
+    });
   }
 
   /* ---------- PERSISTENCE (localStorage) ---------- */
@@ -479,6 +591,9 @@
     loadSavedCandidates: loadSavedCandidates,
     saveCandidate: saveCandidate,
     clearSavedCandidates: clearSavedCandidates,
-    mergeCandidates: mergeCandidates
+    mergeCandidates: mergeCandidates,
+    shuffleArray: shuffleArray,
+    shuffleBalanced: shuffleBalanced,
+    fillAvatar: fillAvatar
   };
 })(window);

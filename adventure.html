@@ -108,6 +108,28 @@
   .slot-fill { animation: slot-fill .45s cubic-bezier(.2,1.6,.2,1) both; }
   @keyframes slot-fill { 0%{transform:translateY(14px) scale(.94);opacity:0;} 60%{transform:translateY(-2px) scale(1.03);opacity:1;} 100%{transform:translateY(0) scale(1);opacity:1;} }
 
+  /* Scene-change pill — big centered banner shown when question/card index advances */
+  .scene-pill {
+    position: fixed; left: 50%; top: 28%;
+    transform: translate(-50%, -50%);
+    z-index: 55;
+    pointer-events: none;
+    animation: scenePill 1.2s cubic-bezier(.2,1.4,.2,1) forwards;
+  }
+  @keyframes scenePill {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    18%  { opacity: 1; transform: translate(-50%, -50%) scale(1.12); }
+    30%  { transform: translate(-50%, -50%) scale(1); }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.94) translateY(-8px); }
+  }
+  /* Stronger slide-in for new-question content */
+  .scene-slide-in { animation: sceneSlideIn 0.55s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes sceneSlideIn {
+    from { opacity: 0; transform: translateX(28px) scale(0.985); filter: blur(4px); }
+    to   { opacity: 1; transform: none; filter: none; }
+  }
+
   .node-pulse { position: relative; }
   .node-pulse::after { content:""; position:absolute; inset:-6px; border-radius:9999px;
     border: 3px solid currentColor; animation: nodepulse 1.8s cubic-bezier(.2,.8,.2,1) infinite; opacity: .7; }
@@ -188,7 +210,8 @@ const C = window.CatalystCore;
 const { L1, L2, L3, L4, CONSTANTS, LEVEL_META, DIMENSION_LABEL, FINAL_LEVEL_META,
         LEVEL_SUMMARY, DEV_TIP, STRENGTH_NOTE, POS_SUMMARY, POSITIVE_BULLETS, BARS_DESCRIPTION,
         mockCandidates, computeResults, useCountUp,
-        loadSavedCandidates, saveCandidate, mergeCandidates } = C;
+        loadSavedCandidates, saveCandidate, mergeCandidates,
+        shuffleArray, shuffleBalanced, fillAvatar } = C;
 const { L1_TIMER, L2_CARD_TIMER, L3_TIMER, L4_TIMER, LOG_MS } = CONSTANTS;
 
 const LVL_COLORS = {
@@ -234,6 +257,39 @@ const Icon = ({ name, className="w-5 h-5", stroke=1.8 }) => {
     default: return null;
   }
 };
+
+/* ============ SCENE-CHANGE PILL ============ */
+function SceneChangePill({ idx, total, label, colorA, colorB }) {
+  return (
+    <div className="scene-pill">
+      <div className="flex items-center gap-4 px-6 py-4 rounded-2xl shadow-2xl"
+           style={{
+             background: `linear-gradient(135deg, ${colorA}, ${colorB})`,
+             color: "#fff",
+             boxShadow: `0 24px 60px -12px ${colorA}aa, inset 0 1px 0 rgba(255,255,255,0.3)`
+           }}>
+        <div className="font-display text-xs font-bold tracking-[0.3em] opacity-85">{(label || "SCENE").toUpperCase()}</div>
+        <div className="h-6 w-px bg-white/40"/>
+        <div className="font-display text-3xl md:text-4xl font-black tabular leading-none">
+          {idx + 1}<span className="text-white/60 text-xl ml-1">/ {total}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+function useScenePill(idx) {
+  const [show, setShow] = useState(false);
+  const [pillKey, setPillKey] = useState(0);
+  useEffect(() => {
+    if (idx > 0) {
+      setPillKey(k => k + 1);
+      setShow(true);
+      const t = setTimeout(() => setShow(false), 1150);
+      return () => clearTimeout(t);
+    }
+  }, [idx]);
+  return { show, pillKey };
+}
 
 /* ============ ORBS ============ */
 function AmbientOrbs() {
@@ -509,7 +565,20 @@ function LevelIntro({ levelNum, onBegin }) {
             <Icon name={m.icon} className="w-12 h-12 md:w-14 md:h-14" stroke={2.2}/>
           </div>
           <h1 className="font-display text-4xl md:text-5xl font-extrabold">{m.title}</h1>
-          <p className="text-lg text-[var(--ink-soft)] mt-6 max-w-xl mx-auto leading-relaxed">"{m.narrative}"</p>
+          <p className="text-[15px] md:text-base text-[var(--ink-soft)] mt-6 max-w-xl mx-auto leading-relaxed">{m.narrative}</p>
+          {m.guidelines && m.guidelines.length > 0 && (
+            <div className="mt-6 max-w-xl mx-auto text-left space-y-2">
+              {m.guidelines.map((g, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold mt-0.5"
+                       style={{background: `linear-gradient(135deg, ${m.a}, ${m.b})`}}>
+                    {i+1}
+                  </div>
+                  <p className="text-[13.5px] text-[var(--ink)] leading-relaxed">{g}</p>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="mt-8">
             <button onClick={onBegin} className="btn-primary px-8 py-3.5 font-display text-base flex items-center gap-2 mx-auto"
                     style={{background:`linear-gradient(135deg, ${m.a}, ${m.b})`,boxShadow:`0 14px 32px -10px ${m.b}aa`}}>
@@ -517,7 +586,7 @@ function LevelIntro({ levelNum, onBegin }) {
             </button>
             <div className="mt-4 text-xs text-[var(--ink-mute)]">
               {levelNum===1 && "6 scenarios · 15 seconds each · pick the move most like you"}
-              {levelNum===2 && "Meet Alex · 6 cards · pick one Most Like You and one Less Like You"}
+              {levelNum===2 && "Pick your character · 9 cards · mark each More or Less Like You"}
               {levelNum===3 && "3 strategic puzzles · rank 3 priorities in each"}
               {levelNum===4 && "3 reflection prompts · 20 seconds each"}
             </div>
@@ -528,18 +597,22 @@ function LevelIntro({ levelNum, onBegin }) {
   );
 }
 
-/* ============ LEVEL 1 — Simple SJT (pick one) ============ */
+/* ============ LEVEL 1 — SJT (options shuffled per user) ============ */
 function Level1Screen({ idx, total, scenario, timeLeft, onSelect, logging, lastPicked, progressPct }) {
-  const dimLabel = scenario.dimension === "accountability" ? "Ownership" : scenario.dimension === "actionOrientation" ? "Action" : "Perseverance";
+  const dimLabel = scenario.dimension === "accountability" ? "Accountability" : scenario.dimension === "actionOrientation" ? "Action Orientation" : "Perseverance";
+  // Shuffle options per scenario mount so BARS-4 isn't always last.
+  const shuffled = useMemo(() => shuffleArray(scenario.options), [scenario.id]);
+  const { show: showPill, pillKey } = useScenePill(idx);
   return (
-    <div className="scene-enter max-w-4xl mx-auto px-4 md:px-8 py-6">
+    <div key={scenario.id} className="scene-slide-in max-w-4xl mx-auto px-4 md:px-8 py-6">
+      {showPill && <SceneChangePill key={pillKey} idx={idx} total={total} label="Scenario" colorA="#10b981" colorB="#06b6d4"/>}
       <div className="card-soft p-4 mb-5 flex items-center gap-4">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{background:"linear-gradient(135deg,var(--lvl1-a),var(--lvl1-b))"}}>
           <Icon name="compass" className="w-5 h-5"/>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-display font-bold">Level 1 · Explorer</span>
+            <span className="font-display font-bold">Level 1 · Execution Lab</span>
             <span className="chip" style={{background:"rgba(16,185,129,0.08)",color:"#065f46",borderColor:"rgba(16,185,129,0.3)"}}>Scenario {idx+1} / {total}</span>
             <span className="text-[10px] font-bold tracking-wider text-[var(--ink-mute)] uppercase">· {dimLabel}</span>
           </div>
@@ -553,20 +626,23 @@ function Level1Screen({ idx, total, scenario, timeLeft, onSelect, logging, lastP
       <div className="card p-5 md:p-6 mb-5 relative overflow-hidden">
         <div className="orb absolute -top-12 -right-12 w-56 h-56" style={{background:"#c7f0e0",opacity:0.55}}/>
         <div className="relative">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-[var(--lvl1-a)] animate-pulse"/>
-            <div className="text-xs font-mono tracking-widest text-[var(--lvl1-a)] uppercase">SCENARIO</div>
+            <div className="text-xs font-mono tracking-widest text-[var(--lvl1-a)] uppercase">SCENARIO {idx+1}</div>
           </div>
-          <div className="text-base md:text-lg text-[var(--ink)] leading-relaxed">{scenario.prompt}</div>
+          {scenario.title && (
+            <div className="font-display text-xl md:text-2xl font-bold mt-1">{scenario.title}</div>
+          )}
+          <div className="text-[14px] md:text-[15px] text-[var(--ink)] leading-relaxed mt-2">{scenario.prompt}</div>
         </div>
       </div>
 
       <div className="flex items-center gap-2 mb-3 px-1">
         <Icon name="target" className="w-4 h-4 text-[var(--ink-soft)]"/>
-        <span className="text-xs font-semibold tracking-widest text-[var(--ink-soft)]">CHOOSE YOUR MOVE</span>
+        <span className="text-xs font-semibold tracking-widest text-[var(--ink-soft)]">CHOOSE YOUR MOVE — TRUST YOUR FIRST INSTINCT</span>
       </div>
       <div className="stagger space-y-3">
-        {scenario.options.map((opt,i) => {
+        {shuffled.map((opt,i) => {
           const isPicked = lastPicked && lastPicked.id === opt.id;
           return (
             <button key={opt.id} disabled={logging} onClick={()=>onSelect(opt)}
@@ -608,44 +684,59 @@ function SkipOverlay() {
   );
 }
 
-/* ============ LEVEL 2 — THE CHARACTER MIRROR (Identity Projection) ============ */
-function Level2Screen({ scenario, onSubmit, logging, progressPct }) {
-  const [phase, setPhase] = useState("briefing"); // briefing | playing | done
+/* ============ LEVEL 2 — CHARACTER MIRROR (9 cards · binary per card) ============ */
+function Level2Screen({ scenario, onSubmit, logging }) {
+  const [phase, setPhase] = useState("avatar"); // avatar | briefing | playing | done
+  const [avatar, setAvatar] = useState(null);
+  const [deck, setDeck] = useState([]);
   const [cardIdx, setCardIdx] = useState(0);
-  const [mostLikely, setMostLikely] = useState(null);
-  const [leastLikely, setLeastLikely] = useState(null);
+  const [decisions, setDecisions] = useState([]); // {cardId, dimension, level, decision, responseMs}
   const [timeLeft, setTimeLeft] = useState(L2_CARD_TIMER);
-  const [cardKey, setCardKey] = useState(0); // to re-trigger entrance animation
+  const [cardKey, setCardKey] = useState(0);
   const startedAt = useRef(Date.now());
-  const cards = scenario.cards;
+  const cardShownAt = useRef(Date.now());
 
-  const finish = (mostVal, leastVal) => {
+  const pickAvatar = (a) => {
+    setAvatar(a);
+    setDeck(shuffleBalanced(scenario.cards, 2));
+    setPhase("briefing");
+  };
+
+  const beginPlaying = () => {
+    startedAt.current = Date.now();
+    cardShownAt.current = Date.now();
+    setPhase("playing");
+  };
+
+  const finish = (finalDecisions) => {
     setPhase("done");
     const dt = Date.now() - startedAt.current;
-    setTimeout(() => onSubmit({ mostLikely: mostVal, leastLikely: leastVal, auto: !mostVal && !leastVal, responseMs: dt }), 700);
+    setTimeout(() => onSubmit({
+      avatar: avatar ? avatar.id : null,
+      decisions: finalDecisions,
+      auto: finalDecisions.every(d => !d.decision),
+      responseMs: dt
+    }), 700);
   };
 
-  const advance = (basket) => {
+  const recordDecision = (decision /* "most" | "least" | null */) => {
     if (logging || phase !== "playing") return;
-    const card = cards[cardIdx];
-    let nextMost = mostLikely, nextLeast = leastLikely;
-    if (basket === "most" && !mostLikely) {
-      nextMost = { cardId: card.id, dimension: card.dimension, level: card.level, text: card.text };
-      setMostLikely(nextMost);
-    } else if (basket === "least" && !leastLikely) {
-      nextLeast = { cardId: card.id, dimension: card.dimension, level: card.level, text: card.text };
-      setLeastLikely(nextLeast);
-    }
-    if (nextMost && nextLeast) { finish(nextMost, nextLeast); return; }
-    if (cardIdx + 1 < cards.length) {
+    const card = deck[cardIdx];
+    const next = [...decisions, {
+      cardId: card.id, dimension: card.dimension, level: card.level,
+      decision, responseMs: Date.now() - cardShownAt.current
+    }];
+    setDecisions(next);
+    if (cardIdx + 1 < deck.length) {
       setCardIdx(cardIdx + 1);
       setCardKey(k => k + 1);
+      cardShownAt.current = Date.now();
     } else {
-      finish(nextMost, nextLeast);
+      finish(next);
     }
   };
 
-  // Per-card timer
+  // per-card timer
   useEffect(() => {
     if (phase !== "playing" || logging) return;
     const start = Date.now(), duration = L2_CARD_TIMER * 1000;
@@ -655,15 +746,15 @@ function Level2Screen({ scenario, onSubmit, logging, progressPct }) {
       if (cancelled) return;
       const rem = Math.max(0, (duration - (Date.now() - start)) / 1000);
       setTimeLeft(rem);
-      if (rem <= 0 && !fired) { fired = true; advance(null); }
+      if (rem <= 0 && !fired) { fired = true; recordDecision(null); }
       else if (rem > 0) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
     return () => { cancelled = true; };
   }, [phase, cardIdx, logging]);
 
-  /* ---- BRIEFING PHASE ---- */
-  if (phase === "briefing") {
+  /* ---- AVATAR SELECT ---- */
+  if (phase === "avatar") {
     return (
       <div className="scene-enter max-w-3xl mx-auto px-4 md:px-8 py-8">
         <div className="card-soft p-4 mb-5 flex items-center gap-4">
@@ -672,32 +763,82 @@ function Level2Screen({ scenario, onSubmit, logging, progressPct }) {
           </div>
           <div className="flex-1">
             <div className="font-display font-bold">Level 2 · The Character Mirror</div>
-            <div className="text-xs text-[var(--ink-soft)]">Identity Projection · Briefing</div>
+            <div className="text-xs text-[var(--ink-soft)]">Choose your character</div>
           </div>
         </div>
 
-        <div className="card p-6 md:p-10 relative overflow-hidden text-center">
+        <div className="card p-6 md:p-10 text-center relative overflow-hidden">
+          <div className="orb absolute -top-10 -left-10 w-72 h-72" style={{background:"#d7e4ff",opacity:0.7}}/>
+          <div className="orb absolute -bottom-16 -right-10 w-64 h-64" style={{background:"#f3ccff",opacity:0.6,animationDelay:"-8s"}}/>
+          <div className="relative">
+            <h2 className="font-display text-3xl md:text-4xl font-extrabold">Pick Your <span className="text-gradient">Lead</span></h2>
+            <p className="text-[var(--ink-soft)] mt-2 max-w-md mx-auto">You'll watch this character handle work situations. Pick whoever feels easier to relate to.</p>
+
+            <div className="mt-8 grid grid-cols-2 gap-4 max-w-lg mx-auto">
+              {scenario.avatars.map(a => (
+                <button key={a.id} onClick={() => pickAvatar(a)}
+                        className="rounded-2xl p-5 md:p-6 transition-all text-center group"
+                        style={{
+                          background: "linear-gradient(135deg, #dbeafe 0%, #f3ccff 100%)",
+                          border: "3px solid #fff",
+                          boxShadow: "0 10px 28px -10px rgba(99,102,241,0.4), inset 0 0 0 2px rgba(255,255,255,0.5)"
+                        }}>
+                  <div className="avatar-float w-24 h-24 md:w-28 md:h-28 rounded-3xl flex items-center justify-center text-6xl md:text-7xl mx-auto shadow-xl"
+                       style={{background:"#fff",border:"2px solid rgba(99,102,241,0.2)"}}>
+                    {a.emoji}
+                  </div>
+                  <div className="mt-4 font-display text-2xl font-extrabold">{a.name}</div>
+                  <div className="text-xs text-[var(--ink-soft)] mt-1">{a.role}</div>
+                  <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full font-display text-xs font-bold tracking-wider text-white transition-transform group-hover:scale-105"
+                       style={{background:"linear-gradient(135deg,var(--lvl2-a),var(--lvl2-b))",boxShadow:"0 8px 20px -8px rgba(14,165,233,0.6)"}}>
+                    CHOOSE {a.name.toUpperCase()} <Icon name="arrow-right" className="w-3.5 h-3.5"/>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ---- BRIEFING ---- */
+  if (phase === "briefing") {
+    const briefing = fillAvatar(scenario.briefingTpl, avatar);
+    return (
+      <div className="scene-enter max-w-3xl mx-auto px-4 md:px-8 py-8">
+        <div className="card-soft p-4 mb-5 flex items-center gap-4">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{background:"linear-gradient(135deg,var(--lvl2-a),var(--lvl2-b))"}}>
+            <Icon name="eye" className="w-5 h-5"/>
+          </div>
+          <div className="flex-1">
+            <div className="font-display font-bold">Level 2 · The Character Mirror</div>
+            <div className="text-xs text-[var(--ink-soft)]">Briefing</div>
+          </div>
+        </div>
+
+        <div className="card p-6 md:p-10 text-center relative overflow-hidden">
           <div className="orb absolute -top-10 -left-10 w-72 h-72" style={{background:"#d7e4ff",opacity:0.7}}/>
           <div className="orb absolute -bottom-16 -right-10 w-64 h-64" style={{background:"#f3ccff",opacity:0.6,animationDelay:"-8s"}}/>
           <div className="relative">
             <div className="avatar-pop inline-block">
               <div className="avatar-float w-28 h-28 md:w-32 md:h-32 rounded-3xl flex items-center justify-center text-6xl md:text-7xl mx-auto shadow-xl halo"
                    style={{background:"linear-gradient(135deg, #dbeafe, #e0e7ff)",border:"3px solid #fff"}}>
-                {scenario.avatar.emoji}
+                {avatar.emoji}
               </div>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-6">Meet <span className="text-gradient">{scenario.avatar.name}</span></h2>
-            <div className="text-sm text-[var(--ink-soft)] mt-1">{scenario.avatar.role}</div>
-            <p className="text-[15px] md:text-base text-[var(--ink)] leading-relaxed mt-6 max-w-xl mx-auto situation-reveal">
-              {scenario.briefing}
-            </p>
+            <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-6">Meet <span className="text-gradient">{avatar.name}</span></h2>
+            <div className="text-sm text-[var(--ink-soft)] mt-1">{avatar.role}</div>
+            <p className="text-[15px] md:text-base text-[var(--ink)] leading-relaxed mt-6 max-w-xl mx-auto situation-reveal">{briefing}</p>
             <div className="mt-6 inline-flex items-center gap-2 chip text-sm px-4 py-2" style={{background:"rgba(99,102,241,0.1)",color:"#3730a3",borderColor:"rgba(99,102,241,0.25)"}}>
               <Icon name="target" className="w-4 h-4"/>
               <span className="font-semibold">{scenario.instruction}</span>
             </div>
-            <div className="mt-6">
-              <button onClick={()=>{ startedAt.current = Date.now(); setPhase("playing"); }}
-                      className="btn-primary px-8 py-3.5 font-display text-base flex items-center gap-2 mx-auto"
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button onClick={() => setPhase("avatar")} className="btn-ghost px-4 py-2 text-xs">
+                ← Change character
+              </button>
+              <button onClick={beginPlaying} className="btn-primary px-8 py-3.5 font-display text-base flex items-center gap-2"
                       style={{background:"linear-gradient(135deg,var(--lvl2-a),var(--lvl2-b))",boxShadow:"0 14px 32px -10px rgba(14,165,233,0.6)"}}>
                 <Icon name="play" className="w-4 h-4"/> Begin Mirror
               </button>
@@ -708,7 +849,7 @@ function Level2Screen({ scenario, onSubmit, logging, progressPct }) {
     );
   }
 
-  /* ---- DONE PHASE (brief confirmation) ---- */
+  /* ---- DONE ---- */
   if (phase === "done") {
     return (
       <div className="scene-enter max-w-2xl mx-auto px-4 md:px-8 py-16 text-center">
@@ -724,14 +865,17 @@ function Level2Screen({ scenario, onSubmit, logging, progressPct }) {
     );
   }
 
-  /* ---- PLAYING PHASE (card by card) ---- */
-  const card = cards[cardIdx];
+  /* ---- PLAYING ---- */
+  const card = deck[cardIdx];
+  const cardText = fillAvatar(card.text, avatar);
   const dimPretty = card.dimension === "accountability" ? "Accountability" : card.dimension === "actionOrientation" ? "Action Orientation" : "Perseverance";
-  const mostDone = !!mostLikely, leastDone = !!leastLikely;
+  const mostCount  = decisions.filter(d => d.decision === "most").length;
+  const leastCount = decisions.filter(d => d.decision === "least").length;
+  const showPill = cardIdx > 0;
 
   return (
-    <div className="scene-enter max-w-5xl mx-auto px-4 md:px-8 py-6">
-      {/* HUD */}
+    <div key={cardKey} className="scene-slide-in max-w-5xl mx-auto px-4 md:px-8 py-6">
+      {showPill && <SceneChangePill key={cardKey} idx={cardIdx} total={deck.length} label="Card" colorA="#0ea5e9" colorB="#6366f1"/>}
       <div className="card-soft p-4 mb-5 flex items-center gap-4">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{background:"linear-gradient(135deg,var(--lvl2-a),var(--lvl2-b))"}}>
           <Icon name="eye" className="w-5 h-5"/>
@@ -739,110 +883,79 @@ function Level2Screen({ scenario, onSubmit, logging, progressPct }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-display font-bold">Level 2 · Character Mirror</span>
-            <span className="chip" style={{background:"rgba(14,165,233,0.08)",color:"#075985",borderColor:"rgba(14,165,233,0.3)"}}>Card {cardIdx+1} / {cards.length}</span>
+            <span className="chip" style={{background:"rgba(14,165,233,0.08)",color:"#075985",borderColor:"rgba(14,165,233,0.3)"}}>Card {cardIdx+1} / {deck.length}</span>
           </div>
           <div className="mt-1.5 h-1.5 w-full rounded-full bg-[var(--line-2)] overflow-hidden">
-            <div className="h-full rounded-full" style={{width:(((cardIdx)/cards.length)*100)+"%",background:"linear-gradient(90deg,var(--lvl2-a),var(--lvl2-b))",transition:"width .4s ease"}}/>
+            <div className="h-full rounded-full" style={{width:((cardIdx/deck.length)*100)+"%",background:"linear-gradient(90deg,var(--lvl2-a),var(--lvl2-b))",transition:"width .4s ease"}}/>
           </div>
         </div>
         <CircularTimer value={timeLeft} max={L2_CARD_TIMER} colors={["#0ea5e9","#6366f1"]}/>
       </div>
 
-      {/* Basket status chips */}
       <div className="mb-5 flex items-center justify-center gap-3 flex-wrap">
-        <div className="chip text-sm px-3.5 py-1.5" style={{
-            background: mostDone ? "rgba(16,185,129,0.12)" : "rgba(16,185,129,0.04)",
-            color: mostDone ? "#065f46" : "#047857",
-            borderColor: mostDone ? "rgba(16,185,129,0.35)" : "rgba(16,185,129,0.2)"
-          }}>
+        <div className="chip text-sm px-3.5 py-1.5" style={{background:"rgba(16,185,129,0.10)",color:"#065f46",borderColor:"rgba(16,185,129,0.3)"}}>
           <span className="text-base">🧲</span>
           <span className="font-semibold">More Like Me</span>
-          <span className={"ml-1 "+(mostDone?"text-[#065f46]":"text-[var(--ink-mute)]")}>· {mostDone ? "✓ filled" : "empty"}</span>
+          <span className="ml-1 tabular">· {mostCount}</span>
         </div>
-        <div className="chip text-sm px-3.5 py-1.5" style={{
-            background: leastDone ? "rgba(249,115,22,0.12)" : "rgba(249,115,22,0.04)",
-            color: leastDone ? "#9a3412" : "#b45309",
-            borderColor: leastDone ? "rgba(249,115,22,0.35)" : "rgba(249,115,22,0.2)"
-          }}>
+        <div className="chip text-sm px-3.5 py-1.5" style={{background:"rgba(249,115,22,0.10)",color:"#9a3412",borderColor:"rgba(249,115,22,0.3)"}}>
           <span className="text-base">✕</span>
           <span className="font-semibold">Less Like Me</span>
-          <span className={"ml-1 "+(leastDone?"text-[#9a3412]":"text-[var(--ink-mute)]")}>· {leastDone ? "✓ filled" : "empty"}</span>
+          <span className="ml-1 tabular">· {leastCount}</span>
         </div>
       </div>
 
-      {/* Card with avatar */}
       <div key={cardKey} className="card p-5 md:p-8 relative overflow-hidden mb-6 scene-enter">
         <div className="orb absolute -top-10 -right-10 w-60 h-60" style={{background:"#d7e4ff",opacity:0.55}}/>
         <div className="relative flex items-start gap-5">
           <div className="shrink-0 avatar-pop">
             <div className="avatar-float w-20 h-20 md:w-24 md:h-24 rounded-3xl flex items-center justify-center text-5xl md:text-6xl shadow-lg"
                  style={{background:"linear-gradient(135deg, #dbeafe, #e0e7ff)",border:"3px solid #fff"}}>
-              {scenario.avatar.emoji}
+              {avatar.emoji}
             </div>
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-display font-bold">{scenario.avatar.name}</span>
-              <span className="text-xs text-[var(--ink-mute)]">· {scenario.avatar.role}</span>
+              <span className="font-display font-bold">{avatar.name}</span>
+              <span className="text-xs text-[var(--ink-mute)]">· {avatar.role}</span>
               <span className="talking-dots ml-1" aria-hidden><span/><span/><span/></span>
             </div>
             <div className="mt-1 text-[10px] font-bold tracking-[0.2em] uppercase" style={{color:"var(--lvl2-a)"}}>{dimPretty}</div>
-            <p className="text-[15px] md:text-[17px] text-[var(--ink)] leading-relaxed mt-3 situation-reveal">
-              "{card.text}"
-            </p>
+            <p className="text-[15px] md:text-[17px] text-[var(--ink)] leading-relaxed mt-3 situation-reveal">"{cardText}"</p>
           </div>
         </div>
       </div>
 
-      {/* Action buttons — tap to drop into basket */}
       <div className="grid sm:grid-cols-2 gap-3">
-        <button onClick={()=>advance("most")} disabled={logging || mostDone}
-                className="rounded-2xl p-5 md:p-6 text-left transition-all relative overflow-hidden group"
-                style={{
-                  background: mostDone ? "#f3f4f6" : "linear-gradient(135deg, #ecfdf5, #fff)",
-                  border: `2px solid ${mostDone ? "#e5e7eb" : "#10b981"}`,
-                  cursor: (logging || mostDone) ? "not-allowed" : "pointer",
-                  opacity: mostDone ? 0.55 : 1,
-                  boxShadow: mostDone ? "none" : "0 10px 28px -10px rgba(16,185,129,0.4)"
-                }}>
+        <button onClick={()=>recordDecision("most")} disabled={logging}
+                className="rounded-2xl p-5 md:p-6 text-left transition-all"
+                style={{background:"linear-gradient(135deg, #ecfdf5, #fff)",border:"2px solid #10b981",boxShadow:"0 10px 28px -10px rgba(16,185,129,0.4)"}}>
           <div className="flex items-center gap-3">
             <div className="text-3xl md:text-4xl">🧲</div>
             <div className="flex-1">
-              <div className="font-display font-bold text-base md:text-lg" style={{color: mostDone?"#6b7280":"#065f46"}}>More Like Me</div>
-              <div className="text-xs mt-0.5" style={{color: mostDone?"#9ca3af":"#047857"}}>
-                {mostDone ? "basket already filled" : "this is part of my execution style"}
-              </div>
+              <div className="font-display font-bold text-base md:text-lg" style={{color:"#065f46"}}>More Like Me</div>
+              <div className="text-xs mt-0.5" style={{color:"#047857"}}>this is part of my execution style</div>
             </div>
-            {!mostDone && <Icon name="arrow-right" className="w-5 h-5" stroke={2.4} style={{color:"#10b981"}}/>}
+            <Icon name="arrow-right" className="w-5 h-5" stroke={2.4} style={{color:"#10b981"}}/>
           </div>
         </button>
-
-        <button onClick={()=>advance("least")} disabled={logging || leastDone}
-                className="rounded-2xl p-5 md:p-6 text-left transition-all relative overflow-hidden group"
-                style={{
-                  background: leastDone ? "#f3f4f6" : "linear-gradient(135deg, #fff7ed, #fff)",
-                  border: `2px solid ${leastDone ? "#e5e7eb" : "#f97316"}`,
-                  cursor: (logging || leastDone) ? "not-allowed" : "pointer",
-                  opacity: leastDone ? 0.55 : 1,
-                  boxShadow: leastDone ? "none" : "0 10px 28px -10px rgba(249,115,22,0.4)"
-                }}>
+        <button onClick={()=>recordDecision("least")} disabled={logging}
+                className="rounded-2xl p-5 md:p-6 text-left transition-all"
+                style={{background:"linear-gradient(135deg, #fff7ed, #fff)",border:"2px solid #f97316",boxShadow:"0 10px 28px -10px rgba(249,115,22,0.4)"}}>
           <div className="flex items-center gap-3">
             <div className="text-3xl md:text-4xl">✕</div>
             <div className="flex-1">
-              <div className="font-display font-bold text-base md:text-lg" style={{color: leastDone?"#6b7280":"#9a3412"}}>Less Like Me</div>
-              <div className="text-xs mt-0.5" style={{color: leastDone?"#9ca3af":"#b45309"}}>
-                {leastDone ? "basket already filled" : "this isn't part of how I work"}
-              </div>
+              <div className="font-display font-bold text-base md:text-lg" style={{color:"#9a3412"}}>Less Like Me</div>
+              <div className="text-xs mt-0.5" style={{color:"#b45309"}}>this isn't part of how I work</div>
             </div>
-            {!leastDone && <Icon name="arrow-right" className="w-5 h-5" stroke={2.4} style={{color:"#f97316"}}/>}
+            <Icon name="arrow-right" className="w-5 h-5" stroke={2.4} style={{color:"#f97316"}}/>
           </div>
         </button>
       </div>
 
-      {/* Skip */}
       <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="text-xs text-[var(--ink-mute)]">Timer auto-skips a card if you don't decide. Only one card per basket.</div>
-        <button onClick={()=>advance(null)} disabled={logging} className="btn-ghost px-4 py-1.5 text-xs flex items-center gap-1.5">
+        <div className="text-xs text-[var(--ink-mute)]">Each card is independent. Timer auto-skips if you don't decide.</div>
+        <button onClick={()=>recordDecision(null)} disabled={logging} className="btn-ghost px-4 py-1.5 text-xs flex items-center gap-1.5">
           Skip card <Icon name="arrow-right" className="w-3.5 h-3.5"/>
         </button>
       </div>
@@ -851,11 +964,12 @@ function Level2Screen({ scenario, onSubmit, logging, progressPct }) {
 }
 
 /* ============ LEVEL 3 — STRATEGIST (Inline rank-click) ============ */
-function Level3Screen({ scenario, timeLeft, onSubmit, logging, progressPct }) {
+function Level3Screen({ idx, total: scenarioTotal, scenario, timeLeft, onSubmit, logging, progressPct }) {
   const [rankings, setRankings] = useState([]);
   useEffect(() => { setRankings([]); }, [scenario.id]);
   const total = scenario.options.length;
   const allRanked = rankings.length === total;
+  const { show: showPill, pillKey } = useScenePill(idx || 0);
   const nextRank = rankings.length + 1;
   const rankOf = (i) => { const p = rankings.indexOf(i); return p === -1 ? null : p + 1; };
   const toggle = (i) => {
@@ -872,7 +986,8 @@ function Level3Screen({ scenario, timeLeft, onSubmit, logging, progressPct }) {
   const promptText = allRanked ? "All ranked — lock it in to continue" : `Tap your ${ordinal(nextRank)} priority`;
 
   return (
-    <div className="scene-enter max-w-3xl mx-auto px-4 md:px-8 py-6">
+    <div key={scenario.id} className="scene-slide-in max-w-3xl mx-auto px-4 md:px-8 py-6">
+      {showPill && <SceneChangePill key={pillKey} idx={idx || 0} total={scenarioTotal || 1} label="Puzzle" colorA="#f59e0b" colorB="#f97316"/>}
       <div className="card-soft p-4 mb-5 flex items-center gap-4">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{background:"linear-gradient(135deg,var(--lvl3-a),var(--lvl3-b))"}}>
           <Icon name="chess" className="w-5 h-5"/>
@@ -880,7 +995,7 @@ function Level3Screen({ scenario, timeLeft, onSubmit, logging, progressPct }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-display font-bold">Level 3 · Strategist</span>
-            <span className="chip" style={{background:"#fff7ed",color:"#9a3412",borderColor:"#fed7aa"}}>Priority Ranking</span>
+            <span className="chip" style={{background:"#fff7ed",color:"#9a3412",borderColor:"#fed7aa"}}>Puzzle {(idx||0)+1} / {scenarioTotal||1}</span>
           </div>
           <div className="mt-1.5 h-1.5 w-full rounded-full bg-[var(--line-2)] overflow-hidden">
             <div className="h-full rounded-full" style={{width:progressPct+"%",background:"linear-gradient(90deg,var(--lvl3-a),var(--lvl3-b))",transition:"width .6s cubic-bezier(.2,.8,.2,1)"}}/>
@@ -998,8 +1113,10 @@ function Level3Screen({ scenario, timeLeft, onSubmit, logging, progressPct }) {
 
 /* ============ LEVEL 4 — MASTERMIND ============ */
 function Level4Screen({ idx, total, question, timeLeft, onSelect, logging, lastPicked, progressPct }) {
+  const { show: showPill, pillKey } = useScenePill(idx);
   return (
-    <div className="scene-enter max-w-5xl mx-auto px-4 md:px-8 py-6">
+    <div key={question.id} className="scene-slide-in max-w-5xl mx-auto px-4 md:px-8 py-6">
+      {showPill && <SceneChangePill key={pillKey} idx={idx} total={total} label="Reflection" colorA="#a855f7" colorB="#ec4899"/>}
       <div className="card-soft p-4 mb-5 flex items-center gap-4">
         <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{background:"linear-gradient(135deg,var(--lvl4-a),var(--lvl4-b))"}}>
           <Icon name="key" className="w-5 h-5"/>
@@ -1542,14 +1659,14 @@ function CatalystAdventure() {
     return () => { cancelled = true; };
   }, [view, l1Idx, logging, skipping, submitL1]);
 
-  /* LEVEL 2 — Character Mirror (timer + cards managed inside component) */
+  /* LEVEL 2 — Character Mirror (9-card binary; timer managed in component) */
   const submitL2 = useCallback((result) => {
     if (loggingRef.current) return;
     const s = L2[l2Idx];
     setL2Answers(prev => [...prev, {
       id: s.id,
-      mostLikely: result.mostLikely,
-      leastLikely: result.leastLikely,
+      avatar: result.avatar,
+      decisions: result.decisions || [],
       auto: result.auto || false,
       responseMs: result.responseMs
     }]);
@@ -1691,7 +1808,7 @@ function CatalystAdventure() {
                                         progressPct={(l2Idx/L2.length)*100}/>; break;
       case "level2-complete": body = <LevelCompleteView levelNum={2} candidateName={candidateName} onContinue={()=>setView("journey")}/>; break;
       case "level3-intro":    body = <LevelIntro levelNum={3} onBegin={()=>setView("level3")}/>; break;
-      case "level3":          body = <Level3Screen scenario={L3[l3Idx]} timeLeft={timeLeft} onSubmit={(o)=>submitL3(o,false)} logging={logging}
+      case "level3":          body = <Level3Screen idx={l3Idx} total={L3.length} scenario={L3[l3Idx]} timeLeft={timeLeft} onSubmit={(o)=>submitL3(o,false)} logging={logging}
                                         progressPct={(l3Idx/L3.length)*100}/>; break;
       case "level3-complete": body = <LevelCompleteView levelNum={3} candidateName={candidateName} onContinue={()=>setView("journey")}/>; break;
       case "level4-intro":    body = <LevelIntro levelNum={4} onBegin={()=>setView("level4")}/>; break;

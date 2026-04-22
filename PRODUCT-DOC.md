@@ -1,7 +1,7 @@
 # Catalyst Protocol — Versioned Product Document
 
 **Product:** Catalyst Protocol · Behavioral Simulation for "Drive for Results"
-**Version:** v1.6 · 2026-04-22
+**Version:** v1.8 · 2026-04-22
 **Status:** POC · stable
 **Maintainer:** Hyreo Labs
 
@@ -151,6 +151,26 @@ Additional instrumentation (not flags; shown as signals):
 # 2. Versioned Change Log
 
 Each version below corresponds to a material design or functionality shift. File sizes approximate.
+
+### v1.8 — 2026-04-22 · **Scene-Change Pill + Stronger Question Transitions**
+- **Scene-change pill** — when the question / card / scenario index advances inside any level, a large centered banner pops in with a spring bounce ("SCENARIO 2/6", "CARD 3/9", "PUZZLE 2/3", "REFLECTION 2/3"), holds ~400 ms, then fades out. Anchored at `top: 28%`, `z-index: 55`, `pointer-events: none` so it never blocks clicks. New `useScenePill(idx)` hook + `SceneChangePill` component in both theme files (Adventure = gradient card, Mission = neon glass).
+- **Stronger scene entry** — the main content now uses `scene-slide-in` (slide-in from right + blur-release) on question/card changes, replacing the subtler `scene-enter`. Each level screen is re-keyed on scenario/question id to force a clean re-mount.
+- **Per-level treatment:**
+  - L1 Explorer: pill on scenario advance (`idx > 0`)
+  - L2 Observer: pill on card advance (`cardIdx > 0`, re-keyed via `cardKey`)
+  - L3 Strategist: pill on scenario advance (now accepts `idx` + `total` props)
+  - L4 Mastermind: pill on question advance (`idx > 0`)
+  - L1 briefing phase (Mission) is exempt — it's the entry point, not a transition
+- Prevents the subtle "did the content just change?" confusion that was reported after v1.7.
+
+### v1.7 — 2026-04-22 · **Execution Lab Scenarios · 9-Card Mirror · Shuffle + Anti-Faking**
+- **Level 1 rebuilt as The Execution Lab** — six fresh narrative scenarios (titled: The Vanishing Stakeholder, The Resource Crunch, The Empty Brief, The Critical Data Gap, The Impossible Target, The Recurring Obstacle) with 4 options each, BARS 1–4. Scenarios carry a `title` field now; Level Intro ships a full participant briefing + 3 guidelines (rendered as numbered chips in Adventure; as a mono/neon card stack in Mission). **Options are shuffled per user** via `shuffleArray`, so BARS-4 is not always button D.
+- **Level 2 expanded to 9 cards with dual avatar** — choose **Alex** (🧑‍💼) or **Avantika** (👩‍💼) before briefing; card texts auto-fill via `{NAME}/{he}/{his}/{him}/{refl}` placeholders and the `fillAvatar()` helper. The deck is shuffled via `shuffleBalanced()` which rejects any arrangement with 3 same-dimension cards in a row (max-run = 2). Candidates mark **each** card as More Like Me / Less Like Me / skip — there's no basket cap anymore; the section simply plays through all 9 decisions.
+- **New anti-faking flags:**
+  - **Social Desirability Bias** — if the candidate marks BOTH the BARS-2 and BARS-4 cards of the *same* dimension as More Like Me, the positions are contradictory (cautious vs. bold) and flag-worthy.
+  - **Low Urgency Signal** — if the candidate spends >12 s on an Action-Orientation L1 scenario (threshold exported as `LOW_URGENCY_THRESHOLD_MS`), the Manager report surfaces a calibration note.
+- **Scoring adjustments:** L2 per-card decisions contribute to dimension averages (`most` → push BARS level; `least` at BARS-2 → bonus +0.2; `least` at BARS-4 → penalty -0.3). Mirror Match, Consistency Gap, Always-Highest, Social Desirability, Low Urgency all land in the same `flags[]` list on the result, rendered as amber detail cards on the Manager report.
+- **Shared helpers exposed:** `shuffleArray`, `shuffleBalanced`, `fillAvatar` on `window.CatalystCore` so theme files stay declarative.
 
 ### v1.6 — 2026-04-22 · **Adventure UI Trims + Go-Home Exit**
 - **Level subtitles removed** from Adventure intro cards and Level Intro splashes — the labels `Tactical Response`, `Behavioral Monitoring`, `Decision & Prioritization`, and `Self-Concept & Motivation` are no longer rendered. Titles, tags (EXPLORER / OBSERVER / STRATEGIST / MASTERMIND), and narrative blurbs remain.
