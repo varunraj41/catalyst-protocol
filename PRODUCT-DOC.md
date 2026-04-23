@@ -1,7 +1,7 @@
 # Catalyst Protocol — Versioned Product Document
 
 **Product:** Catalyst Protocol · Behavioral Simulation for "Drive for Results"
-**Version:** v2.0 · 2026-04-22
+**Version:** v2.2 · 2026-04-22
 **Status:** POC · stable
 **Maintainer:** Hyreo Labs
 
@@ -151,6 +151,26 @@ Additional instrumentation (not flags; shown as signals):
 # 2. Versioned Change Log
 
 Each version below corresponds to a material design or functionality shift. File sizes approximate.
+
+### v2.2 — 2026-04-22 · **Mirrored Arrow Directions (Pull vs. Push)**
+- **More Like Me** — arrow-pill moved to the **right** side of the button, icon flipped (`transform: scaleX(-1)`) so the arrow points **← toward the text**. On hover the pill translates **-6 px** (inward) instead of outward — a "pulls the text closer" affordance for inclusion. Text is now left-aligned with `flex-1` and sits on the left.
+- **Less Like Me** unchanged structurally — arrow-pill on the left pointing right (→), text pushed to the far right with `justify-between` + `gap-6`. On hover the pill translates **+6 px** outward — a "pushes the text away" affordance for distancing.
+- New modifier classes `.mirror-btn--pull` and `.mirror-btn--push` drive the directional hover/active translations from a single shared `.arrow-pill` primitive. Net effect: the two buttons become mirror-opposite directional metaphors (← pull · → push) while keeping identical pill geometry, identical lift on hover, and identical press feedback on active.
+
+### v2.1 — 2026-04-22 · **Directional Mirror Buttons (Arrow-Pill Affordance)**
+- **L2 More/Less Like Me buttons** redesigned with explicit directional affordance. Emoji replaced with a **circular arrow-pill** on the left of each button — the arrow (→) visually triggers the action and points toward the text. New `.mirror-btn` + `.arrow-pill` CSS classes in both themes.
+  - **More Like Me (positive)** — arrow + text tightly grouped (`gap-3`). Arrow-pill is green in Adventure (`#10b981→#059669` gradient) and neon green in Mission (filled with dark `#04060e` arrow icon on green). Text sits close to the arrow.
+  - **Less Like Me (negative)** — arrow + text pushed apart (`justify-between`, `gap-6`) for a "distancing" effect. Text right-aligned, slammed to the right edge of the button. Arrow-pill is orange in Adventure (`#f97316→#ea580c`) and neon amber in Mission.
+- **Arrow pill as an interactive control:**
+  - Circular 48×48 px pill with colored background + inset highlight + soft glow shadow (neon glow in Mission)
+  - Consistent size/shape across both buttons
+  - Feels like a button within a button, not just an icon
+- **Interaction feel:**
+  - Hover on the outer button → arrow-pill translates **+6 px** toward the text + scales **1.06** (cubic-bezier `.2,1.3,.2,1` for spring)
+  - Hover also lifts the whole button `translateY(-2px)`
+  - Click → outer button presses down (`translateY(0) scale(0.99)`), arrow-pill snaps with a slight inward motion (`translateX(3px) scale(0.96)`)
+  - Disabled state mutes the whole button to 55 % opacity, no-cursor
+- Semantically opposite, visually balanced — both kept at 46–48 px pill diameter, same corner radius, mirror-symmetric padding, same press feedback.
 
 ### v2.0 — 2026-04-22 · **Title-First Cards + Square-Box Rank UI**
 - **Adventure intro cards re-stacked** — the title (`The Execution Lab`, `The Character Mirror`, `The Strategist`, `The Mastermind`) is now the **first element** in each card, rendered in 18/20 px Fredoka extrabold with a reserved `min-height: 3rem` so titles that wrap to two lines keep card heights aligned. Below the title: the `[icon] + LEVEL 0N / TAG` row, then the blurb. Visual hierarchy now reads title → category → blurb, matching how users scan the grid.

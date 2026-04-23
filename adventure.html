@@ -108,6 +108,19 @@
   .slot-fill { animation: slot-fill .45s cubic-bezier(.2,1.6,.2,1) both; }
   @keyframes slot-fill { 0%{transform:translateY(14px) scale(.94);opacity:0;} 60%{transform:translateY(-2px) scale(1.03);opacity:1;} 100%{transform:translateY(0) scale(1);opacity:1;} }
 
+  /* Directional "Mirror" button (L2 More/Less Like Me) with arrow-pill affordance */
+  .mirror-btn { transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s; cursor: pointer; position: relative; overflow: hidden; }
+  .mirror-btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .mirror-btn:active:not(:disabled) { transform: translateY(0) scale(0.99); }
+  .mirror-btn:disabled { cursor: not-allowed; opacity: 0.55; }
+  .arrow-pill { transition: transform .28s cubic-bezier(.2,1.3,.2,1), box-shadow .25s; display: inline-flex; align-items: center; justify-content: center; }
+  /* push = arrow on left pointing right, moves forward on hover (distancing) */
+  .mirror-btn--push:hover:not(:disabled) .arrow-pill { transform: translateX(6px) scale(1.06); }
+  .mirror-btn--push:active:not(:disabled) .arrow-pill { transform: translateX(3px) scale(0.96); }
+  /* pull = arrow on right pointing left, moves inward on hover (inclusion) */
+  .mirror-btn--pull:hover:not(:disabled) .arrow-pill { transform: translateX(-6px) scale(1.06); }
+  .mirror-btn--pull:active:not(:disabled) .arrow-pill { transform: translateX(-3px) scale(0.96); }
+
   /* Scene-change pill — big centered banner shown when question/card index advances */
   .scene-pill {
     position: fixed; left: 50%; top: 28%;
@@ -239,6 +252,7 @@ const Icon = ({ name, className="w-5 h-5", stroke=1.8 }) => {
     case "lock":    return <svg viewBox="0 0 24 24" className={className} {...p}><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>;
     case "play":    return <svg viewBox="0 0 24 24" className={className}><path d="m6 4 14 8-14 8V4Z" fill="currentColor"/></svg>;
     case "arrow-right": return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>;
+    case "arrow-left":  return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M19 12H5M11 19l-7-7 7-7"/></svg>;
     case "restart": return <svg viewBox="0 0 24 24" className={className} {...p}><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>;
     case "user":    return <svg viewBox="0 0 24 24" className={className} {...p}><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>;
     case "briefcase":return <svg viewBox="0 0 24 24" className={className} {...p}><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>;
@@ -935,28 +949,53 @@ function Level2Screen({ scenario, onSubmit, logging }) {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-3">
+        {/* MORE LIKE ME — arrow on RIGHT pointing LEFT (pulls text in · inclusion) */}
         <button onClick={()=>recordDecision("most")} disabled={logging}
-                className="rounded-2xl p-5 md:p-6 text-left transition-all"
-                style={{background:"linear-gradient(135deg, #ecfdf5, #fff)",border:"2px solid #10b981",boxShadow:"0 10px 28px -10px rgba(16,185,129,0.4)"}}>
+                className="mirror-btn mirror-btn--pull rounded-2xl p-5 md:p-6 text-left"
+                style={{
+                  background: "linear-gradient(135deg, #ecfdf5, #fff)",
+                  border: "2px solid #10b981",
+                  boxShadow: "0 10px 28px -10px rgba(16,185,129,0.4)"
+                }}>
           <div className="flex items-center gap-3">
-            <div className="text-3xl md:text-4xl">🧲</div>
-            <div className="flex-1">
-              <div className="font-display font-bold text-base md:text-lg" style={{color:"#065f46"}}>More Like Me</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-display font-bold text-base md:text-lg leading-tight" style={{color:"#065f46"}}>More Like Me</div>
               <div className="text-xs mt-0.5" style={{color:"#047857"}}>this is part of my execution style</div>
             </div>
-            <Icon name="arrow-right" className="w-5 h-5" stroke={2.4} style={{color:"#10b981"}}/>
+            <div className="arrow-pill shrink-0"
+                 style={{
+                   width: 48, height: 48, borderRadius: 9999,
+                   background: "linear-gradient(135deg, #10b981, #059669)",
+                   color: "#fff",
+                   boxShadow: "0 8px 18px -4px rgba(16,185,129,0.55), inset 0 1px 0 rgba(255,255,255,0.25)"
+                 }}>
+              <Icon name="arrow-left" className="w-5 h-5" stroke={2.6}/>
+            </div>
           </div>
         </button>
+
+        {/* LESS LIKE ME — arrow on LEFT pointing RIGHT (pushes text away · distancing) */}
         <button onClick={()=>recordDecision("least")} disabled={logging}
-                className="rounded-2xl p-5 md:p-6 text-left transition-all"
-                style={{background:"linear-gradient(135deg, #fff7ed, #fff)",border:"2px solid #f97316",boxShadow:"0 10px 28px -10px rgba(249,115,22,0.4)"}}>
-          <div className="flex items-center gap-3">
-            <div className="text-3xl md:text-4xl">✕</div>
-            <div className="flex-1">
-              <div className="font-display font-bold text-base md:text-lg" style={{color:"#9a3412"}}>Less Like Me</div>
+                className="mirror-btn mirror-btn--push rounded-2xl p-5 md:p-6"
+                style={{
+                  background: "linear-gradient(135deg, #fff7ed, #fff)",
+                  border: "2px solid #f97316",
+                  boxShadow: "0 10px 28px -10px rgba(249,115,22,0.4)"
+                }}>
+          <div className="flex items-center justify-between gap-6">
+            <div className="arrow-pill shrink-0"
+                 style={{
+                   width: 48, height: 48, borderRadius: 9999,
+                   background: "linear-gradient(135deg, #f97316, #ea580c)",
+                   color: "#fff",
+                   boxShadow: "0 8px 18px -4px rgba(249,115,22,0.55), inset 0 1px 0 rgba(255,255,255,0.25)"
+                 }}>
+              <Icon name="arrow-right" className="w-5 h-5" stroke={2.6}/>
+            </div>
+            <div className="text-right min-w-0">
+              <div className="font-display font-bold text-base md:text-lg leading-tight" style={{color:"#9a3412"}}>Less Like Me</div>
               <div className="text-xs mt-0.5" style={{color:"#b45309"}}>this isn't part of how I work</div>
             </div>
-            <Icon name="arrow-right" className="w-5 h-5" stroke={2.4} style={{color:"#f97316"}}/>
           </div>
         </button>
       </div>
