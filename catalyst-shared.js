@@ -20,67 +20,67 @@
     {
       id: "L1-1", dimension: "accountability",
       title: "The Vanishing Stakeholder",
-      prompt: "It is 4:00 PM. A critical project release is set for 5:00 PM. You need a final sign-off from a stakeholder who has suddenly gone offline and isn't answering calls.",
+      prompt: "It is 4:00 PM. A critical project release is set for 5:00 PM. You need a final sign-off from a stakeholder who has suddenly gone offline and isn’t answering calls",
       options: [
-        { id: "a", text: "I will not put much pressure — I'll wait for them to come back online. We cannot risk an unapproved release.", level: 1 },
-        { id: "b", text: "I'll send a final 'Urgent' email to the stakeholder and alert my manager that the delay is due to the stakeholder's absence.", level: 2 },
-        { id: "c", text: "I'll review their previous requirements, proceed with the release, and send a summary of why I moved forward.", level: 3 },
-        { id: "d", text: "I'll get a verbal 'go' from their deputy or a peer with authority, document the risk, and ensure the release happens by 5:00 PM.", level: 4 }
+        { id: "a", text: "I prefer not to put much pressure; instead, I will wait for them to come back online, as we cannot risk an unapproved release.", level: 1 },
+        { id: "b", text: "I will send a final 'Urgent' email to the stakeholder and alert my manager that the delay is due to the stakeholder's absence.", level: 2 },
+        { id: "c", text: "I will review their previous requirements, proceed with the release, and send a summary of why I moved forward.", level: 3 },
+        { id: "d", text: "I will get a verbal 'go' from their deputy or a peer with authority, document the risk, and ensure the release happens by 5:00 PM.", level: 4 }
       ]
     },
     {
       id: "L1-2", dimension: "actionOrientation",
       title: "The Resource Crunch",
-      prompt: "Your lead developer's system just crashed. 20% of the project is locked in that machine, and the client is expecting delivery in two hours.",
+      prompt: "Your lead developer’s system just crashed. 20% of the project is locked in that machine, and the client is expecting the delivery in two hours",
       options: [
-        { id: "a", text: "I'll inform the client that we have a technical failure and will resume as soon as the system is fixed.", level: 1 },
-        { id: "b", text: "I'll tell the developer to let me know the moment the laptop is fixed so we can start work immediately.", level: 2 },
-        { id: "c", text: "I'll ask the developer to work on manual documentation while I look for a spare laptop in the office.", level: 3 },
-        { id: "d", text: "I'll take the lead to re-assign the remaining 20% of the tasks to other team members to ensure we hit the target today.", level: 4 }
+        { id: "a", text: "I will inform the client that we have a technical failure and will resume as soon as the system is fixed.", level: 1 },
+        { id: "b", text: "I will tell the developer to let me know the moment the laptop is fixed so we can start work immediately.", level: 2 },
+        { id: "c", text: "I will ask the developer to work on manual documentation while I arrange for a spare laptop in the office.", level: 3 },
+        { id: "d", text: "I will take the lead to re-assign the remaining 20% of the tasks to another team member by persuading the Team Lead (TL) to ensure we hit the target today.", level: 4 }
       ]
     },
     {
       id: "L1-3", dimension: "actionOrientation",
       title: "The Empty Brief",
-      prompt: "You are tasked with launching a new initiative, but the project brief is extremely vague and your manager is too busy to provide a detailed walkthrough.",
+      prompt: "You are tasked with launching a new initiative, but the project brief is extremely vague and your manager is too busy to provide a detailed walkthrough",
       options: [
         { id: "a", text: "I usually wait for a formal briefing or more detailed instructions to avoid making any costly mistakes.", level: 1 },
-        { id: "b", text: "I spend time researching past projects to find a template or guide before I feel comfortable starting.", level: 2 },
-        { id: "c", text: "I schedule short 5-minute stand-ups with team members to piece together the requirements and build a roadmap.", level: 3 },
+        { id: "b", text: "I spend time researching past projects to find a template or guide before I feel comfortable starting execution.", level: 2 },
+        { id: "c", text: "I schedule short 5-minute 'stand-ups' with other team members to piece together the requirements and build a roadmap.", level: 3 },
         { id: "d", text: "I create a rough 'Version 1.0' draft immediately and present it to stakeholders to force a reaction and gain clarity through iteration.", level: 4 }
       ]
     },
     {
       id: "L1-4", dimension: "accountability",
       title: "The Critical Data Gap",
-      prompt: "You realize a colleague made a significant error in a report sent to a client an hour ago. Your colleague has just left for a week-long vacation.",
+      prompt: "You realize a colleague made a significant error in a report that was sent to a client an hour ago. Your colleague has just left for a week-long vacation.",
       options: [
-        { id: "a", text: "I'll wait for the colleague to return — they're the one who can explain the logic, and it doesn't look nice to intervene on their work while they're away.", level: 1 },
-        { id: "b", text: "I'll alert my supervisor to the error so they know it wasn't my mistake, and wait for their guidance.", level: 2 },
-        { id: "c", text: "I'll send a polite update to the client acknowledging the error and promising a corrected version with a timeline.", level: 3 },
-        { id: "d", text: "I'll re-calculate the data myself immediately, send the corrected report to the client with an apology, and brief my colleague later.", level: 4 }
+        { id: "a", text: "I will wait for the colleague to return, as they will be best suited to explain the logic and rectify the error themselves.", level: 1 },
+        { id: "b", text: "I will alert my supervisor to the error so they are aware I have done my part, then wait for their guidance.", level: 2 },
+        { id: "c", text: "I will send a polite update to the client acknowledging the error and promising a corrected version by the end of the day.", level: 3 },
+        { id: "d", text: "I will re-calculate the data myself immediately, send the corrected report to the client with an apology, and brief my colleague later.", level: 4 }
       ]
     },
     {
       id: "L1-5", dimension: "perseverance",
       title: "The Impossible Target",
-      prompt: "Think of a time you were given a target the rest of the team felt was impossible within the timeframe. If you haven't faced this exact situation, imagine it — and respond with your natural instinct.",
+      prompt: "Think of a time when you were given a mission or target that the rest of the team felt was impossible to achieve within the given timeframe. If you haven’t faced this, imagine it as a real-life scenario and respond with your natural instinct.",
       options: [
-        { id: "a", text: "I focused on doing my specific part reliably but prepared stakeholders for a likely 'near-miss' on the final goal.", level: 1 },
+        { id: "a", text: "I focused on doing my specific part reliably but prepared the stakeholders for a likely 'near-miss' on the final goal.", level: 1 },
         { id: "b", text: "I worked hard during office hours but suggested to the lead that the target be reassessed to a more realistic level.", level: 2 },
-        { id: "c", text: "I identified the biggest bottlenecks and put in extra hours to clear them, ensuring we got as close to the target as possible.", level: 3 },
+        { id: "c", text: "I identified the biggest bottlenecks and persuaded my colleagues to put in extra hours to clear them, ensuring we got as close to the target as possible.", level: 3 },
         { id: "d", text: "I looked for unconventional process hacks to bypass obstacles and kept the team energized until the 'impossible' goal was met.", level: 4 }
       ]
     },
     {
       id: "L1-6", dimension: "perseverance",
       title: "The Recurring Obstacle",
-      prompt: "You are working on a complex technical task that has failed three times already due to minor, unpredictable bugs. Your energy is dipping.",
+      prompt: "You are working on a complex technical task that has failed three times already due to unpredictable bugs. Your energy is dipping.",
       options: [
-        { id: "a", text: "I'll ask for the task to be re-assigned to someone with a fresh set of eyes to avoid further delays.", level: 1 },
-        { id: "b", text: "I'll document the three failures and ask for a technical consult before trying a fourth time.", level: 2 },
-        { id: "c", text: "I'll take a short break to reset, then methodically re-check the entire logic from scratch before attempting it again.", level: 3 },
-        { id: "d", text: "I'll analyze the failure patterns, create a new quality checklist, and stay with the task until it is successfully completed.", level: 4 }
+        { id: "a", text: "I will ask for the task to be re-assigned to someone with a fresh set of eyes to avoid further delays.", level: 1 },
+        { id: "b", text: "I will document the three failures and ask for a technical consult before trying a fourth time.", level: 2 },
+        { id: "c", text: "I will take a short break to reset, then methodically re-check the entire logic from scratch before attempting it again.", level: 3 },
+        { id: "d", text: "I will analyze the failure patterns, create a new quality checklist, and stay with the task until it is successfully completed.", level: 4 }
       ]
     }
   ];
@@ -100,8 +100,8 @@
         { id: "alex",     name: "Alex",     emoji: "🧑‍💼", role: "High-performing Lead", subj: "he",  obj: "him", poss: "his", refl: "himself" },
         { id: "avantika", name: "Avantika", emoji: "👩‍💼", role: "High-performing Lead", subj: "she", obj: "her", poss: "her", refl: "herself" }
       ],
-      briefingTpl: "Meet {NAME}, a high-performing lead. In this section, you will see how {NAME} handles various work situations and the logic behind those actions. Your task is to decide: is this 'More Like Me' or 'Less Like Me'? There are no right or wrong styles — we're building a map of your unique execution signature.",
-      instruction: "You'll see 9 cards (3 per dimension). For each, tap More Like Me or Less Like Me. Skips are allowed.",
+      briefingTpl: "Meet {NAME}. {NAME} is a professional navigating the same types of daily challenges you face. In this section, you will see a series of snapshots showing how {NAME} handles specific work situations and, more importantly, the internal logic {he} uses to make decisions.\n\nYour Task: As each snapshot appears, simply ask yourself: \"Is this how I naturally operate?\"\nClick \"More Like Me\" if {NAME}'s approach feels like your natural default.\nClick \"Less Like Me\" if your own style is different from {NAME}'s.\n\nWhy are we doing this? This isn't a comparison or a competition. There is no \"perfect\" professional profile. By observing {NAME}, you can more easily recognize your own unique patterns.\n\nBe instinctive. Be authentic. Discover the patterns that drive you.",
+      instruction: "You'll see 9 cards. For each, tap More Like Me or Less Like Me.",
       cards: [
         // Action Orientation × 3
         { id: "a2", dimension: "actionOrientation", level: 2,
@@ -217,6 +217,12 @@
 
   var LEVEL_META = {
     1: { key: "explorer",   title: "The Execution Lab",    tag: "EXPLORER",   sub: "Tactical Response",
+         headline: "Level 1: The Execution Lab",
+         subheadline: "Speed Meets Instinct.",
+         script: "You are now stepping into a simulated work arena. You will be faced with a series of fast-moving professional scenarios, each with four possible actions. Speed is a component of execution — you have 20 seconds per decision.",
+         taskLabel: "Pick the move that most authentically reflects what you would do in the heat of the moment.",
+         closing: "Trust your gut. Be decisive.",
+         buttonLabel: "START THE SPRINT",
          blurb: "React under pressure. Six scenarios probe your tactical instincts across the three drivers.",
          narrative: "You are about to enter a high-fidelity simulation of real-world professional challenges. Each scenario comes with four distinct actions — each one valid, each one mapped to a different behavioral attribute. Trust your first instinct.",
          guidelines: [
@@ -226,12 +232,30 @@
          ]
        },
     2: { key: "observer",   title: "The Character Mirror", tag: "OBSERVER",   sub: "Behavioral Monitoring",
+         headline: "Level 2: The Character Mirror",
+         subheadline: "Observe. Recognize. Reflect.",
+         script: "You will meet a professional navigating the same types of daily challenges you face. Watch the snapshots of how they handle specific work situations and the internal logic behind each decision. There is no perfect professional profile — by observing them, you recognize your own unique patterns.",
+         taskLabel: "For each snapshot, decide whether this approach is More Like You or Less Like You.",
+         closing: "Be instinctive. Be authentic.",
+         buttonLabel: "OPEN THE MIRROR",
          blurb: "Meet Alex or Avantika. Nine cards reveal whether each move is More or Less Like You.",
          narrative: "Meet your character. Watch how they handle various work situations. Decide whether each move is More Like You or Less Like You." },
-    3: { key: "strategist", title: "The Strategist",       tag: "STRATEGIST", sub: "Decision & Prioritization",
+    3: { key: "strategist", title: "The Priority Lens",    tag: "STRATEGIST", sub: "Decision & Prioritization",
+         headline: "Level 3: The Priority Lens",
+         subheadline: "Complexity meets Choice.",
+         script: "Complex situations often present us with multiple 'right' paths. In these moments, your intrinsic behavior acts as your compass, guiding the choices you make. Let's see how you prioritize your impact when the stakes are high.",
+         taskLabel: "Rank the options in order of your preference — from your Most Preferred action to your Least Preferred.",
+         closing: "Trust your compass. Define your path.",
+         buttonLabel: "START RANKING",
          blurb: "Resources are scarce. Rank three priorities from top to bottom across three puzzles.",
          narrative: "Resources are limited. Rank your priorities from highest to lowest." },
-    4: { key: "mastermind", title: "The Mastermind",       tag: "MASTERMIND", sub: "Self-Concept & Motivation",
+    4: { key: "mastermind", title: "The Core Narrative",   tag: "MASTERMIND", sub: "Self-Concept & Motivation",
+         headline: "Level 4: The Core Narrative",
+         subheadline: "The \"Why\" Behind the Signature.",
+         script: "You've navigated the scenarios and set your priorities. Now, we reach the final stage of the sprint: The Reasoning.\n\nEvery professional signature has a story. This is your opportunity to share the logic and intent behind your choices. Your insights here will provide the final clarity needed to complete your Execution Map.",
+         taskLabel: "Share a brief reflection on your decision-making style.",
+         closing: "Complete the journey. Secure your signature.",
+         buttonLabel: "FINISH THE SPRINT",
          blurb: "Look inward. Three reflections map what really drives your focus and follow-through.",
          narrative: "Look inward. Which statement truly describes your drive?" }
   };
@@ -304,23 +328,28 @@
   var mockCandidates = [
     { id: "c-1", name: "Ananya Sharma", date: "2026-04-18", score: 3.52, level: 4, status: "Shortlisted",
       dims: { accountability: 3.67, actionOrientation: 3.50, perseverance: 3.25 },
-      meta: { avgResponseMs: 5400, fastCount: 1, consistencyFlag: false, flags: [] } },
+      meta: { avgResponseMs: 5400, fastCount: 1, consistencyFlag: false, flags: [],
+              skippedByLevel: { 1: 0, 2: 0, 3: 0, 4: 0 }, skippedTotal: 0 } },
     { id: "c-2", name: "Rohan Mehta",   date: "2026-04-19", score: 2.92, level: 3, status: "Reviewed",
       dims: { accountability: 3.00, actionOrientation: 3.00, perseverance: 2.50 },
-      meta: { avgResponseMs: 6200, fastCount: 0, consistencyFlag: false, flags: [] } },
+      meta: { avgResponseMs: 6200, fastCount: 0, consistencyFlag: false, flags: [],
+              skippedByLevel: { 1: 1, 2: 0, 3: 0, 4: 1 }, skippedTotal: 2 } },
     { id: "c-3", name: "Priya Nair",    date: "2026-04-20", score: 2.18, level: 2, status: "Pending",
       dims: { accountability: 2.33, actionOrientation: 2.00, perseverance: 2.00 },
       meta: { avgResponseMs: 7800, fastCount: 0, consistencyFlag: true,
               flags: [{ key:"aspirationalBias", label:"Aspirational Bias", severity:"amber",
-                        detail:"Level 4 self-concept rated high while Level 1 tactical behavior trended low." }] } },
+                        detail:"Level 4 self-concept rated high while Level 1 tactical behavior trended low." }],
+              skippedByLevel: { 1: 2, 2: 3, 3: 0, 4: 1 }, skippedTotal: 6 } },
     { id: "c-4", name: "Kabir Shah",    date: "2026-04-21", score: 3.78, level: 4, status: "Shortlisted",
       dims: { accountability: 4.00, actionOrientation: 3.67, perseverance: 3.50 },
       meta: { avgResponseMs: 4100, fastCount: 2, consistencyFlag: false,
               flags: [{ key:"alwaysHighest", label:"Always-Highest Pattern", severity:"amber",
-                        detail:"Every Level 1 choice was the top-scoring option. Probe for social-desirability bias." }] } },
+                        detail:"Every Level 1 choice was the top-scoring option. Probe for social-desirability bias." }],
+              skippedByLevel: { 1: 0, 2: 0, 3: 0, 4: 0 }, skippedTotal: 0 } },
     { id: "c-5", name: "Meera Iyer",    date: "2026-04-21", score: 1.88, level: 2, status: "Pending",
       dims: { accountability: 2.00, actionOrientation: 2.00, perseverance: 1.50 },
-      meta: { avgResponseMs: 9100, fastCount: 0, consistencyFlag: false, flags: [] } }
+      meta: { avgResponseMs: 9100, fastCount: 0, consistencyFlag: false, flags: [],
+              skippedByLevel: { 1: 1, 2: 2, 3: 1, 4: 0 }, skippedTotal: 4 } }
   ];
 
   /* ---------- SCORING ENGINE ---------- */
@@ -461,6 +490,18 @@
     var avgResponseMs = times.length ? Math.round(times.reduce(function (s, n) { return s + n; }, 0) / times.length) : 0;
     var fastCount     = times.filter(function (t) { return t > 0 && t < 3000; }).length;
 
+    // Skipped / auto-submitted question counts per level
+    var skippedByLevel = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    l1.forEach(function (a) { if (a && a.auto) skippedByLevel[1]++; });
+    l2.forEach(function (a) {
+      (a && a.decisions || []).forEach(function (d) {
+        if (d && !d.decision) skippedByLevel[2]++;
+      });
+    });
+    l3.forEach(function (a) { if (a && a.auto) skippedByLevel[3]++; });
+    l4.forEach(function (a) { if (a && a.auto) skippedByLevel[4]++; });
+    var skippedTotal = skippedByLevel[1] + skippedByLevel[2] + skippedByLevel[3] + skippedByLevel[4];
+
     return {
       dimScores: dimScores,
       finalScore: finalScore,
@@ -472,7 +513,9 @@
         avgResponseMs: avgResponseMs,
         fastCount: fastCount,
         consistencyFlag: flags.some(function (f) { return f.key === "consistencyGap" || f.key === "aspirationalBias"; }),
-        flags: flags
+        flags: flags,
+        skippedByLevel: skippedByLevel,
+        skippedTotal: skippedTotal
       }
     };
   }

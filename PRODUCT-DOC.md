@@ -1,7 +1,7 @@
 # Catalyst Protocol — Versioned Product Document
 
 **Product:** Catalyst Protocol · Behavioral Simulation for "Drive for Results"
-**Version:** v2.2 · 2026-04-22
+**Version:** v2.6 · 2026-04-22
 **Status:** POC · stable
 **Maintainer:** Hyreo Labs
 
@@ -151,6 +151,57 @@ Additional instrumentation (not flags; shown as signals):
 # 2. Versioned Change Log
 
 Each version below corresponds to a material design or functionality shift. File sizes approximate.
+
+### v2.6 — 2026-04-22 · **3D Option Cards · Timepiece Timer · Slower Stagger · Bigger Text (Both Themes)**
+- **Longer option stagger** — `.stagger > *:nth-child(N)` delays moved from 100 ms steps to **300 ms steps** (`0.30s · 0.60s · 0.90s · 1.20s · 1.50s · 1.80s`). Each option is clearly revealed one-by-one, not as a single cascade. Animation duration bumped from 0.45 s → 0.55 s for a more deliberate entrance. Same values in both themes.
+- **Timer start delay** raised from **950 ms → 1800 ms** across L1 / L3 / L4 effects in both themes, so the countdown only begins once the last option has fully entered.
+- **3D elevated option cards** — all `.opt` buttons now use a **layered box-shadow stack** that creates a true "card stacked above the page" feel:
+  - Inset top highlight + inset bottom shadow (simulated light source)
+  - A **hard 2 px offset shadow** (`0 2px 0 …`) for the stacked-card edge
+  - A soft ambient blur shadow beneath
+  - A larger atmospheric drop shadow
+  - Hover raises the card 4 px, the hard shadow grows to 3 px with a colored tint (indigo in Adventure, electric-blue in Mission), and the drop shadows deepen
+  - Active press settles back to 1 px with a tighter shadow — feels like depressing a physical key
+  - Active/selected state swaps the hard shadow to the success color (green) for an unmistakable "locked-in" read
+  - Adventure uses a subtle `linear-gradient(180deg, #fff → #f8fafc)` face; Mission uses `linear-gradient(180deg, rgba(18,25,48,0.72) → rgba(10,15,28,0.82))` with neon glow
+- **Option text bumped** from `14-15 px` → **`15 px / 17 px` (mobile / desktop)** with `font-medium` weight for improved readability. Applies to L1, L3, L4 in both themes.
+- **Timer redesigned as a timepiece**:
+  - Adventure: larger white/pearl face (`78 px`), `linear-gradient(145deg, #ffffff, #eef2fa)` with multi-layer shadows (outer ambient + inset light + inset shadow) for a genuine 3D watch-crystal look
+  - **12 tick marks** around the outer edge (majors at 12/3/6/9 are thicker and slightly longer)
+  - 3 px-wide progress arc with a live color gradient (theme-colored → warn amber → crit red) and a soft drop-shadow glow matching the current color
+  - Big centered digit + tiny `SEC` micro-caption in mono
+  - Mission: near-black timepiece (`82 px`) with a neon glow halo ring, white tick marks (semi-transparent), neon progress arc with a `drop-shadow(0 0 8px)` halo, digit + SEC in the active color
+
+### v2.5 — 2026-04-22 · **Welcome Moved Back to Adventure Intro**
+- **`index.html` reverted** to the theme-chooser hub (Adventure + Mission cards side by side, footer, no countdown). The briefing content moved off the hub.
+- **Adventure Intro now carries the full Execution Lab welcome** — "Welcome to the Execution Lab · Your Professional Signature Awaits" tagline, two intro paragraphs, `The Objective` box with three outcome bullets, `A Note on Authenticity`, the "Trust your first instinct. Be yourself." sign-off, and the name-entry card with a **Start My Discovery →** button.
+- **3·2·1 GO countdown** now fires inside the Adventure Intro after the candidate enters their name and clicks Start. The `CountdownView` (defined earlier) is rendered when `Intro` transitions to its `countdown` phase. Once `GO` completes, `onStart(name)` is called, the parent stores the candidate name, and the flow continues to the journey map or directly to Level 1.
+- Removed the second countdown from the Level 1 "Action Phase" briefing — there's now a single countdown per run, positioned at the clearest moment of commitment (right after name entry).
+- Mission Control intro/flow unchanged by this revision.
+
+### v2.4 — 2026-04-22 · **Index Welcome · Action Phase Briefing · Sticky Timer · Delayed Start**
+- **index.html rewritten** as the initiation surface. Displays the full *"Welcome to the Execution Lab · Your Professional Signature Awaits"* briefing — two intro paragraphs, **The Objective** block with three bulleted outcomes, **A Note on Authenticity**, and the tagline "Trust your first instinct. Be yourself." A compact theme pill (🗺️ Adventure · 🛰️ Mission) sits in the header; default is Adventure. CTA: **▶ Start My Discovery →**. Pure vanilla HTML/JS — no React, no build step.
+- **3·2·1 GO countdown** moved to `index.html`. On CTA click, a full-screen overlay fires (`LOADING SIMULATION…` sub-header + big pop-in digits + gradient progress bar). After ~2.9 s it redirects to `adventure.html` or `mission.html` based on the selected theme.
+- **Level 1 welcome in both themes rewritten as *The Action Phase*** briefing — replaces the previous "Welcome to the Execution Lab" (now on index) with content focused on the immediate task ahead:
+  - *"You are now stepping into a simulated work arena…"* intro
+  - **The 20-Second Rule** callout with `Trust Your Gut` + `Be Decisive` sub-bullets and a clock icon
+  - **Guidelines** section with 3 numbered items (No "Correct" Answers · Authenticity Over Strategy · Keep Moving)
+  - CTA: **Trust your instinct. Start now →** (Adventure) / **TRUST_YOUR_INSTINCT · START_NOW →** (Mission)
+  - No second countdown here — the countdown already happened on index.
+- **Timer starts *after* options finish appearing** — each L1/L3/L4 timer effect in both themes now waits **950 ms** after scenario mount before starting the countdown. This lets the staggered option entrance finish before the timer pressure begins. Implementation uses a delayed `start = Date.now()` set via `setTimeout` inside the timer effect.
+- **Sticky HUD bar** — the `card-soft` (Adventure) and equivalent Mission HUD bar are now `sticky top-2 z-30` so the circular countdown timer stays anchored to the top of the viewport even when the candidate scrolls down through longer option lists. Padding also tightened from `p-4 mb-5` → `p-3 mb-3` to reclaim vertical space.
+
+### v2.3 — 2026-04-22 · **Execution Lab Welcome + 3·2·1 Countdown**
+- **New Level 1 welcome screen** with the full participant briefing: "Welcome to the Execution Lab · Your Professional Signature Awaits." + 2 introductory paragraphs (behavioral styles, why we're here), a highlighted **The Objective** block with a 3-point bulleted outcome list, an **A Note on Authenticity** paragraph, and a centered "Trust your first instinct. Be yourself." line. Replaces the previous short narrative + guidelines splash.
+  - **Adventure** — new `Level1WelcomeView` component wired into the `level1-intro` route. Soft emerald/cyan gradient accents, `card` container with dual `orb` backdrops. CTA: **Start My Discovery →**.
+  - **Mission** — Level1Screen's internal phase state expanded to `"welcome" | "countdown" | "playing"`. Briefing panel uses `glass-strong` + neon blue/purple accents, mono `// YOUR PROFESSIONAL SIGNATURE AWAITS.` sub-header, `THE OBJECTIVE` in Orbitron with electric-blue glow. CTA: **START_MY_DISCOVERY →**.
+- **3·2·1 GO countdown transition** between the CTA and the first scenario — prevents the jarring immediate jump into play.
+  - `CountdownView` / `MissionCountdownView` component, full-screen fixed overlay with backdrop blur
+  - Stages: `3 → 2 → 1 → GO`, 820 ms for numbers + 550 ms hold on "GO" (~2.9 s total)
+  - Each tick re-triggers a spring-pop via the `.countdown-number` keyframes (`countdownPop`: scale 0.35 → 1.14 → 1, letter-spacing release)
+  - Below the number: `LOADING SIMULATION…` sub-caption in mono + a horizontal gradient progress bar that fills to 100 % over the four ticks
+  - Adventure uses indigo/purple gradient for counting digits, emerald-to-cyan for the final "GO"; Mission uses neon electric-blue and green with heavy `text-shadow` glow
+- Same welcome copy in both themes — just differently dressed.
 
 ### v2.2 — 2026-04-22 · **Mirrored Arrow Directions (Pull vs. Push)**
 - **More Like Me** — arrow-pill moved to the **right** side of the button, icon flipped (`transform: scaleX(-1)`) so the arrow points **← toward the text**. On hover the pill translates **-6 px** (inward) instead of outward — a "pulls the text closer" affordance for inclusion. Text is now left-aligned with `flex-1` and sits on the left.
