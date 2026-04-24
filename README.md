@@ -1,2 +1,2 @@
-# catalyst-protocol
-The Catalyst Protocol addresses these by embedding the assessment inside an immersive, game-like simulation that mixes tactical (real-time) and reflective (self-concept) measurement, with anti-faking validation baked into the scoring engine.
+# signature-sprint
+The Signature Sprint embeds a behavioral assessment inside an immersive, game-like simulation that mixes tactical (real-time) and reflective (self-concept) measurement, with anti-faking validation baked into the scoring engine. Previously named *Catalyst Protocol*; internal JS identifiers (`window.CatalystCore`, `CatalystAdventure`, `CatalystMission`) are retained for compatibility.

@@ -1,4 +1,4 @@
-# Catalyst Protocol — Report Reference
+# Signature Sprint — Report Reference
 
 **Audience:** L&D teams, evaluators, developers, and anyone who needs to understand *why* the system says what it says.
 
@@ -42,11 +42,11 @@ Every option in the simulation maps to a BARS level. BARS is an industry-standar
 - Each "Less Like Me" tap at BARS-4 → **-0.3 penalty** (concerning distancing from strong behavior).
 - Skips don't contribute.
 
-**Level 3 — The Strategist (3 rank-order puzzles)**
+**Level 3 — The Priority Lens (3 rank-order puzzles)**
 - The option ranked **1st** contributes its `level` to the dimension's list.
 - The 2nd and 3rd placements aren't scored directly — but the full ordering is used to detect the **Consistency Gap** flag.
 
-**Level 4 — The Mastermind (3 Why questions)**
+**Level 4 — The Core Narrative (3 Why questions)**
 - Each pick contributes `level` directly to the dimension's list.
 - Per-question 20 s timer; expiry auto-logs the lowest BARS option.
 
@@ -79,8 +79,8 @@ The candidate-facing screen deliberately hides numbers and never uses the word "
 ### "MISSION COMPLETE" header
 Fires once all 4 levels are finished. Pure completion confirmation — no evaluation implied.
 
-### Badge wall (4 of 4)
-Shows all 4 level badges (Explorer · Observer · Strategist · Mastermind). Every candidate earns all 4 — they're **participation tokens**, not achievement grades.
+### Badge wall (visual only · v2.7)
+Shows all 4 level icons (The Execution Lab · The Character Mirror · The Priority Lens · The Core Narrative) with a green check on each. Every candidate sees all 4 — they're **participation tokens**, not achievement grades. As of v2.7 the `Badges Earned` header and the `4 of 4` / `4 / 4` counter chip are removed — only the visual grid remains.
 
 ### "Your Signature" — 3-line BARS narrative
 Three growth-oriented lines tailored to the candidate's banded level:
@@ -157,6 +157,22 @@ Numeric value shown to the right (e.g., `3.67 / 4.00`).
 | **Fast responses (<3s)** | count(responseMs < 3000) | How many decisions were sub-3-second snaps |
 | **Validity flags** | flags[].length | 0 = Clean · 1+ = Flagged |
 | **Pattern** | avg < 4500 → Snap · 4500–8000 → Balanced · > 8000 → Deliberate | Temperament class |
+
+### Skipped Questions by Level (v2.7)
+A dedicated card above Strengths / Development Area that surfaces exactly how many questions the candidate let the timer run out on. One tile per level:
+
+| Level | What's counted as "skipped" |
+|-------|-----------------------------|
+| **L1 Execution Lab** | Any L1 answer where `auto: true` (candidate didn't pick before the 20 s timer expired — system auto-logged the lowest BARS option) |
+| **L2 Character Mirror** | Any card decision where `decision === null` (candidate tapped "Skip card" or let the 15 s per-card timer run out) |
+| **L3 Priority Lens** | Any L3 answer where `auto: true` (timer expired before the rank was locked in — the engine auto-submits the options in their displayed order) |
+| **L4 Core Narrative** | Any L4 answer where `auto: true` (20 s timer expired before a choice — lowest BARS option auto-logged) |
+
+Each tile shows the level icon, the `L0N` code, and the skip count. Tiles with `> 0` turn amber with a warm orange background to make non-zero values instantly visible. A `{N} total` chip in the card header sums across all four levels.
+
+**How to use:** a few skips (1–2) is normal reading fatigue; 3+ across multiple levels usually means the candidate was overwhelmed or didn't engage deeply. Combine with the Fast-responses signal — lots of skips plus lots of sub-3-second picks points to low engagement; lots of skips with average pacing on remaining picks hints at decision paralysis on hard items specifically.
+
+The counts are derived in `computeResults()` (`meta.skippedByLevel` and `meta.skippedTotal`) and surfaced identically in both Adventure and Mission manager reports.
 
 ### Validation flags
 
@@ -265,4 +281,12 @@ The flags turn a single-number verdict into a diagnostic conversation starter.
 
 ---
 
-*Version 2.2 · April 2026*
+## 6 · Export Report
+
+Both the candidate-facing final view and the manager-facing individual report now carry an **Export Report** button (v2.7 for the candidate view; always present on the manager view). It opens the browser's native print dialog. Users can select **Save as PDF** to archive a copy of the report offline.
+
+Because the export uses `window.print()`, the report is rendered with the same layout and colors as on-screen. For cleaner PDFs, evaluators can set the print margins to "minimum" and enable "Background graphics" in the print dialog.
+
+---
+
+*Version 2.7 · April 2026*

@@ -142,12 +142,12 @@
   @keyframes popin { 0%{opacity:0;transform:scale(.6);} 70%{transform:scale(1.08);} 100%{opacity:1;transform:scale(1);} }
   /* Longer stagger — mirrors Adventure. Last option fully visible at ~1.6 s. */
   .stagger > * { animation: sceneEnter .55s cubic-bezier(.2,.8,.2,1) both; opacity: 0; }
-  .stagger > *:nth-child(1) { animation-delay: .30s; }
-  .stagger > *:nth-child(2) { animation-delay: .60s; }
-  .stagger > *:nth-child(3) { animation-delay: .90s; }
-  .stagger > *:nth-child(4) { animation-delay: 1.20s; }
-  .stagger > *:nth-child(5) { animation-delay: 1.50s; }
-  .stagger > *:nth-child(6) { animation-delay: 1.80s; }
+  .stagger > *:nth-child(1) { animation-delay: 1s; }
+  .stagger > *:nth-child(2) { animation-delay: 2s; }
+  .stagger > *:nth-child(3) { animation-delay: 3s; }
+  .stagger > *:nth-child(4) { animation-delay: 4s; }
+  .stagger > *:nth-child(5) { animation-delay: 5s; }
+  .stagger > *:nth-child(6) { animation-delay: 6s; }
 
   .glitch { position: relative; color: var(--green); display: inline-block; }
   .glitch::before, .glitch::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; }
@@ -1227,12 +1227,7 @@ function Level2Screen({ scenario, onSubmit, logging }) {
         </button>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="font-mono text-[10px] tracking-[0.2em] text-white/40">EACH CARD INDEPENDENT · TIMER AUTO-SKIPS</div>
-        <button onClick={()=>recordDecision(null)} disabled={logging} className="btn-ghost px-4 py-1.5 text-[11px] flex items-center gap-1.5">
-          SKIP_CARD <Icon name="arrow-right" className="w-3.5 h-3.5"/>
-        </button>
-      </div>
+      <div className="mt-4 font-mono text-[10px] tracking-[0.2em] text-white/40 text-center">EACH CARD INDEPENDENT · TIMER AUTO-SKIPS</div>
     </div>
   );
 }
@@ -1926,7 +1921,7 @@ function CatalystMission() {
   }, [l1Idx]);
   useEffect(()=>{
     if (view!=="level1"||logging||skipping) return;
-    const OPTIONS_REVEAL_MS = 1800;
+    const OPTIONS_REVEAL_MS = 4700;        // 4 options staggered at 1s each + 0.55s animation tail
     const duration = L1_TIMER*1000;
     setTimeLeft(L1_TIMER);
     let cancelled=false, fired=false, start=null;
@@ -1990,7 +1985,7 @@ function CatalystMission() {
   }, [l3Idx]);
   useEffect(()=>{
     if (view!=="level3"||logging||skipping) return;
-    const OPTIONS_REVEAL_MS = 1800;
+    const OPTIONS_REVEAL_MS = 3700;        // 3 rank options settle + tail
     const duration = L3_TIMER*1000;
     setTimeLeft(L3_TIMER);
     let cancelled=false, fired=false, start=null;
@@ -2036,7 +2031,7 @@ function CatalystMission() {
 
   useEffect(()=>{
     if (view!=="level4"||logging||skipping) return;
-    const OPTIONS_REVEAL_MS = 1800;
+    const OPTIONS_REVEAL_MS = 3700;        // 3 reflection options staggered at 1s + tail
     const duration = L4_TIMER*1000;
     setTimeLeft(L4_TIMER);
     let cancelled=false, fired=false, start=null;
