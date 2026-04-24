@@ -1,9 +1,11 @@
-# Catalyst Protocol — Versioned Product Document
+# Signature Sprint — Versioned Product Document
 
-**Product:** Catalyst Protocol · Behavioral Simulation for "Drive for Results"
-**Version:** v2.6 · 2026-04-22
+**Product:** Signature Sprint · Behavioral Simulation for "Drive for Results"
+**Version:** v2.7 · 2026-04-24
 **Status:** POC · stable
 **Maintainer:** Hyreo Labs
+
+> **Brand note (v2.7):** Product previously named *Catalyst Protocol / Catalyst Quest*. Internal code identifiers (`window.CatalystCore`, `CatalystAdventure`, `CatalystMission`, storage key `catalyst:candidates`) retain the original names for compatibility; user-facing text is now **Signature Sprint** everywhere.
 
 ---
 
@@ -25,7 +27,7 @@ Traditional behavioral assessments (SJTs, self-report inventories, structured in
 - **Aspirational self-concept drift** — candidates describe how they *want* to behave, not how they *do* behave under pressure.
 - **Low candidate engagement** — form-style assessments feel like homework; drop-off and signal quality degrade.
 
-The Catalyst Protocol addresses these by embedding the assessment inside an immersive, game-like simulation that mixes tactical (real-time) and reflective (self-concept) measurement, with anti-faking validation baked into the scoring engine.
+The Signature Sprint addresses these by embedding the assessment inside an immersive, game-like simulation that mixes tactical (real-time) and reflective (self-concept) measurement, with anti-faking validation baked into the scoring engine.
 
 ## 1.2 Product Vision
 
@@ -65,10 +67,12 @@ Each candidate response is mapped to a **BARS** (Behaviorally Anchored Rating Sc
 
 | Level | Name | Modality | Measures | Scenarios | Timer |
 |-------|------|----------|----------|-----------|-------|
-| **L1** | Explorer | SJT — pick one of 4 options | Tactical behavior across all 3 dimensions | 6 (2 × 3 dims) | 15 s each |
-| **L2** | Observer | Avatar + Success Basket drop | Behavioral instinct · decision clarity | 1 | 30 s |
-| **L3** | Strategist | Inline rank 1st / 2nd / 3rd | Trade-off reasoning · accountability | 1 | 25 s |
-| **L4** | Mastermind | Why / self-concept · pick one of 3 | Ownership mindset · motivation source | 3 | untimed |
+| **L1** | The Execution Lab | SJT — pick one of 4 options | Tactical behavior across all 3 dimensions | 6 (2 × 3 dims) | 20 s each |
+| **L2** | The Character Mirror | Avatar + per-card More / Less Like Me | Identity projection · self-recognition | 9 (3 per dim) | 15 s per card |
+| **L3** | The Priority Lens | Inline rank 1st / 2nd / 3rd | Trade-off reasoning · accountability | 3 | 25 s each |
+| **L4** | The Core Narrative | Why / self-concept · pick one of 3 | Ownership mindset · motivation source | 3 | 20 s each |
+
+**Per-level pre-start screen (v2.7)** — before entering each level the candidate sees a shared "level-intro" card in both themes containing the headline (`Level 0N: <Name>`), sub-headline, `The Script:` paragraph, `Your Task:` call-out, 3 guidelines (No "Correct" Answers · Authenticity Over Strategy · Trust Your Gut), a closing tagline, and a level-colored CTA button (`START THE SPRINT` / `OPEN THE MIRROR` / `START RANKING` / `FINISH THE SPRINT`).
 
 ### 1.5.2 Dual UI Implementations
 
@@ -82,16 +86,16 @@ Both consume the identical shared logic engine. Switching themes does not change
 ### 1.5.3 Role-Based Experience
 
 **Candidate** sees:
-- Themed intro + named entry
-- 4 gamified levels with encouraging micro-copy
-- Level-complete celebrations (confetti, badge unlock, encouraging toast)
-- **Final reveal:** 4 badges earned + "Your Signature" paragraph + 3 positive bullets
+- Themed intro + named entry (with new Ground Rules block in the Intro)
+- 4 gamified levels, each preceded by a rich "level-intro" briefing card
+- Level-complete celebrations (confetti, level title, encouraging toast) — no "BADGE EARNED" labels as of v2.7
+- **Final reveal:** 4-icon visual summary (badge grid, unlabeled) + "Your Signature" paragraph + 3 positive bullets + **Export Report** button (print/save-as-PDF) + Go Home
 - **Never exposed to:** numeric scores, dimension values, BARS levels, validation flags
 
-**Manager** sees (professional Inter dashboard, regardless of active theme):
-- Candidate list table with sortable score / level / date / status
+**Manager** sees (professional Inter dashboard, regardless of active theme; **both themes now render an identical manager dashboard as of v2.7** — Mission no longer shows the Status column in the list or the Status line in the header):
+- Candidate list table with sortable score / level / date
 - KPI row: total candidates · avg score · L4 count · flagged count
-- Individual report: final score + level badge + dimension bars + validation signals + flags + strengths + development area + behavioral summary
+- Individual report: final score + level badge + dimension bars + validation signals + flags + **Skipped Questions by Level** (per-level card grid, v2.7) + strengths + development area + behavioral summary
 - Export (print) report
 
 ## 1.6 UX Principles
@@ -151,6 +155,28 @@ Additional instrumentation (not flags; shown as signals):
 # 2. Versioned Change Log
 
 Each version below corresponds to a material design or functionality shift. File sizes approximate.
+
+### v2.7 — 2026-04-24 · **Signature Sprint Rebrand · Level Renames · Unified Pre-Start Screens · Skipped-Question Tracking · Manager Sync**
+- **Brand rename (user-facing only)** — `Catalyst Protocol` / `Catalyst Quest` → **Signature Sprint** across every visible surface. Page titles, hero headlines, buttons (`INITIALIZE_PROTOCOL` → `INITIALIZE_SPRINT`), mission header glitch title (`CATALYST / PROTOCOL` → `SIGNATURE / SPRINT`), header brand mark (Mission `CATALYST://PROTOCOL` → `SIGNATURE://SPRINT`), footers, and all doc copy. Internal JS identifiers (`window.CatalystCore`, `CatalystAdventure`, `CatalystMission`) and the localStorage key (`catalyst:candidates`) are deliberately retained so previous candidate data keeps loading.
+- **Level renames:**
+  - L3 **The Strategist** → **The Priority Lens** (`sub: "Complexity meets Choice."`)
+  - L4 **The Mastermind** → **The Reflection** → (within the same release) **The Core Narrative** (`sub: "The \"Why\" Behind the Signature."`)
+  - L1 / L2 names unchanged (`The Execution Lab` / `The Character Mirror`).
+- **New `LEVEL_META` fields driving pre-start screens** — `headline`, `subheadline`, `script`, `taskLabel`, `closing`, `buttonLabel` on every level in `catalyst-shared.js`. Copy for L3 and L4 comes verbatim from the stakeholder spec (Complex situations often present us… / You've navigated the scenarios…). L1 and L2 were written to match the same structure.
+- **Unified rich pre-start screen in both themes** — replaces the old minimal "chip + narrative + guidelines" `LevelIntro` and the bespoke Mission L1 welcome phase:
+  - Adventure `LevelIntro` now renders: `SECTION 0N · {tag}` chip → headline → subheadline → `The Script:` paragraph → `Your Task:` boxed callout (accent icon bubble + header + body) → numbered 3-point Guidelines list → closing tagline in level-accent color → CTA button that uses `buttonLabel`.
+  - Mission `MissionLevelIntro` mirrors the structure in cyber language: Module/entry ribbon, `SECTION 0N · {TAG}` chip, Orbitron uppercase headline, mono `// subheadline` line, `The Script:` body, dark task card with uppercase heading, `GUIDELINES` (mono badges `01 / 02 / 03`), neon closing line, themed CTA + mono subtitle with counts. Placed between `levelN-complete` and `levelN` — Mission previously jumped straight from L1-complete into L2 / L3 / L4.
+  - L1 in both themes now also goes through the unified intro. Adventure's old `Level1WelcomeView` is bypassed (route `level1-intro` forwards to `LevelIntro levelNum={1}`); Mission's `Level1Screen` `welcome` phase delegates to `MissionLevelIntro levelNum={1}`.
+- **Intro (landing) copy rewritten** — both themes:
+  - Adventure `Intro` — "Welcome to the Signature Sprint / Your Professional Signature Awaits" kept; body replaced with the new shorter copy (3-bullet "It's a chance to…" list, then a `The Ground Rules` callout box: No Right or Wrong · Stay Authentic · Trust Your Gut).
+  - Mission `IntroView` — glitch title switched to `SIGNATURE / SPRINT`; added a matching "MISSION BRIEF" + "THE GROUND RULES" glass panel before the Identify Operator block so Mission has content parity.
+- **L2 Character Mirror briefing (`briefingTpl` in `catalyst-shared.js`) rewritten** to the new spec ("Meet {NAME}. {NAME} is a professional navigating the same types of daily challenges you face… Your Task: As each snapshot appears, simply ask yourself: 'Is this how I naturally operate?'…"). Rendered with `whitespace-pre-line` so the paragraph breaks survive.
+- **Index page refresh** — hub title → `Signature <Sprint>` gradient, tile labels switched from `EXPLORER / OBSERVER / STRATEGIST / MASTERMIND` to `L0N` + two-line level name (`Execution/Lab`, `Character/Mirror`, `Priority/Lens`, `Core/Narrative`) with icons refreshed to ⚡ / 🪞 / 🎯 / 📖 on the Adventure card. Mission hub tiles mirror the change in mono caps (`EXEC LAB`, `CHAR MIRROR`, `PRIORITY LENS`, `CORE NARR`).
+- **Candidate report cleanup** — removed the `Badges Earned` header and `4 of 4` / `4 / 4` counter chip from both themes. The 4-badge visual grid (icons with green check marks) remains — only the label + counter are gone. Added an **Export Report** button next to Go Home in both themes (`window.print()` — mission-themed uppercase `EXPORT_REPORT` / `GO_HOME`).
+- **Manager dashboard synced across themes** — Mission previously had an extra Status column in the list and a "Status: X" line in the report header. Both removed; Mission list now uses Adventure's 5-column grid (`Name · Date · Score · Level`) and the Mission report header shows only `{date}`. Search placeholder reverted to `Search candidate name`.
+- **Skipped-question tracking surfaced in Manager Report** — `computeResults()` now returns `meta.skippedByLevel: { 1, 2, 3, 4 }` and `meta.skippedTotal`. L1 / L3 / L4 count answers with `auto: true`; L2 counts decisions with `decision === null` (skipped cards). Both themes' ManagerReport now render a new "Skipped Questions by Level" card with 4 per-level tiles (icon + `L0N` + count) that turn amber when `> 0`, plus a total-count chip in the card header. Mock candidates updated with sample skipped data for the demo.
+- **Container widths experiment reverted** — temporary `lg:max-w-5xl` / `lg:max-w-6xl` bumps added mid-session were rolled back; every scene container is back to its previous `max-w-3xl / 4xl / 5xl / 6xl` so big monitors show the earlier proportions.
+- **Removed "BADGE EARNED" gamified label** from all Level Complete screens. Adventure shows the level title under the badge (e.g. "The Character Mirror · Next challenge unlocked"); Mission shows the uppercase level title (`THE PRIORITY LENS` / `THE CORE NARRATIVE` / etc.).
 
 ### v2.6 — 2026-04-22 · **3D Option Cards · Timepiece Timer · Slower Stagger · Bigger Text (Both Themes)**
 - **Longer option stagger** — `.stagger > *:nth-child(N)` delays moved from 100 ms steps to **300 ms steps** (`0.30s · 0.60s · 0.90s · 1.20s · 1.50s · 1.80s`). Each option is clearly revealed one-by-one, not as a single cascade. Animation duration bumped from 0.45 s → 0.55 s for a more deliberate entrance. Same values in both themes.
@@ -328,7 +354,7 @@ Each version below corresponds to a material design or functionality shift. File
 - Tilt cards · ripple on click · staggered entrance.
 - Radar chart · conic halo badges · confetti on results.
 
-### v0.1 — Initial Catalyst Protocol
+### v0.1 — Initial Signature Sprint (legacy name: Catalyst Protocol)
 - Single-file React POC.
 - 3 phases (SJT, Rank, Why), Band 01 BARS scenarios.
 - Weighted scoring (0.40 / 0.35 / 0.25) and Level banding (L1–L4).
@@ -375,7 +401,9 @@ window.CatalystCore = {
 
   // Display metadata
   DIMENSION_LABEL,
-  LEVEL_META,          // Explorer / Observer / Strategist / Mastermind
+  LEVEL_META,          // The Execution Lab / The Character Mirror / The Priority Lens / The Core Narrative
+                       // Each entry carries: title, tag, sub, headline, subheadline,
+                       // script, taskLabel, closing, buttonLabel, blurb, narrative, guidelines (L1 only)
   FINAL_LEVEL_META,    // Ineffective / Developing / Effective / Advanced
   LEVEL_SUMMARY,       // Behavioral summary per final level
   DEV_TIP,             // Per-dimension development tip
@@ -466,8 +494,10 @@ window.CatalystCore = {
   meta: {
     avgResponseMs,
     fastCount,
-    consistencyFlag,     // legacy bool; prefer `flags` list
-    flags                // copy of top-level flags, for mock data compatibility
+    consistencyFlag,                              // legacy bool; prefer `flags` list
+    flags,                                        // copy of top-level flags, for mock data compatibility
+    skippedByLevel: { 1: n, 2: n, 3: n, 4: n },   // v2.7 — per-level skip count
+    skippedTotal: n                               // v2.7 — sum across all levels
   }
 }
 ```
@@ -560,9 +590,11 @@ Flags surface **only** in the Manager report — never in the candidate view.
 | Dimension bars | ❌ | ✅ (animated, weighted) |
 | Validation flags | ❌ | ✅ (per-flag detail cards) |
 | Response time / pattern | ❌ | ✅ |
-| Level badges earned | ✅ (4 of 4) | ✅ (implicit in level) |
+| Level badges (4-icon visual, v2.7 unlabeled) | ✅ | ✅ (implicit in level) |
+| Skipped Questions by Level | ❌ | ✅ (v2.7 · per-level tiles + total chip) |
 | Positive signature paragraph | ✅ | ✅ (as "behavioral summary") |
 | Dev tip / growth edge | ❌ | ✅ |
+| Export (print) report | ✅ (v2.7) | ✅ |
 
 ## 3.9 Tech Stack
 

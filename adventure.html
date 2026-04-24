@@ -140,12 +140,12 @@
   /* Longer, more dramatic stagger — each option revealed one-by-one.
      Last option (4) fully visible at ~1.6 s; timer start is delayed 1800 ms. */
   .stagger > * { animation: sceneEnter .55s cubic-bezier(.2,.8,.2,1) both; opacity: 0; }
-  .stagger > *:nth-child(1) { animation-delay: .30s; }
-  .stagger > *:nth-child(2) { animation-delay: .60s; }
-  .stagger > *:nth-child(3) { animation-delay: .90s; }
-  .stagger > *:nth-child(4) { animation-delay: 1.20s; }
-  .stagger > *:nth-child(5) { animation-delay: 1.50s; }
-  .stagger > *:nth-child(6) { animation-delay: 1.80s; }
+  .stagger > *:nth-child(1) { animation-delay: 1s; }
+  .stagger > *:nth-child(2) { animation-delay: 2s; }
+  .stagger > *:nth-child(3) { animation-delay: 3s; }
+  .stagger > *:nth-child(4) { animation-delay: 4s; }
+  .stagger > *:nth-child(5) { animation-delay: 5s; }
+  .stagger > *:nth-child(6) { animation-delay: 6s; }
 
   .slot-fill { animation: slot-fill .45s cubic-bezier(.2,1.6,.2,1) both; }
   @keyframes slot-fill { 0%{transform:translateY(14px) scale(.94);opacity:0;} 60%{transform:translateY(-2px) scale(1.03);opacity:1;} 100%{transform:translateY(0) scale(1);opacity:1;} }
@@ -1274,12 +1274,7 @@ function Level2Screen({ scenario, onSubmit, logging }) {
         </button>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="text-xs text-[var(--ink-mute)]">Each card is independent. Timer auto-skips if you don't decide.</div>
-        <button onClick={()=>recordDecision(null)} disabled={logging} className="btn-ghost px-4 py-1.5 text-xs flex items-center gap-1.5">
-          Skip card <Icon name="arrow-right" className="w-3.5 h-3.5"/>
-        </button>
-      </div>
+      <div className="mt-4 text-xs text-[var(--ink-mute)] text-center">Each card is independent. Timer auto-skips if you don't decide.</div>
     </div>
   );
 }
@@ -1988,7 +1983,7 @@ function CatalystAdventure() {
 
   useEffect(()=>{
     if (view!=="level1" || logging || skipping) return;
-    const OPTIONS_REVEAL_MS = 1800;        // wait for question + options to finish appearing
+    const OPTIONS_REVEAL_MS = 4700;        // wait for 4 options staggered at 1s each + 0.55s animation tail
     const duration = L1_TIMER*1000;
     setTimeLeft(L1_TIMER);
     let cancelled=false, fired=false, start=null;
@@ -2053,7 +2048,7 @@ function CatalystAdventure() {
 
   useEffect(()=>{
     if (view!=="level3" || logging || skipping) return;
-    const OPTIONS_REVEAL_MS = 1800;
+    const OPTIONS_REVEAL_MS = 3700;        // 3 rank options settle + tail
     const duration = L3_TIMER*1000;
     setTimeLeft(L3_TIMER);
     let cancelled=false, fired=false, start=null;
@@ -2097,7 +2092,7 @@ function CatalystAdventure() {
 
   useEffect(()=>{
     if (view!=="level4" || logging || skipping) return;
-    const OPTIONS_REVEAL_MS = 1800;
+    const OPTIONS_REVEAL_MS = 3700;        // 3 reflection options staggered at 1s + tail
     const duration = L4_TIMER*1000;
     setTimeLeft(L4_TIMER);
     let cancelled=false, fired=false, start=null;
